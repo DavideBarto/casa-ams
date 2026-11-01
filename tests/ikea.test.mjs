@@ -9,7 +9,7 @@ const cases = {
   'TV bench': 'cabinet', 'Bench': 'bench', 'Coffee table': 'lowtable', 'Table and 4 chairs': 'diningset', 'Table+2 chairs, outdoor': 'diningset',
   'Dining table': 'table', 'Desk': 'desk', 'Office chair': 'officechair', 'Chair': 'chair', 'Wardrobe with 3 doors': 'wardrobe',
   'Chest of 3 drawers': 'chest', 'Shoe cabinet/storage': 'cabinet', 'Bookcase': 'shelf', 'Rug, low pile': 'rug',
-  'Room darkening curtains, 1 pair': 'curtain', 'Curtain rod combination': 'rod', 'Mirror': 'mirror',
+  'Room darkening curtains, 1 pair': 'curtain', 'Curtain rod combination': 'rod', 'Mirror': 'mirror', 'Spotlight': 'ceillamp', 'LED strip': 'tablelamp',
 };
 for (const [type, shape] of Object.entries(cases)) assert.equal(classify(type), shape, type);
 

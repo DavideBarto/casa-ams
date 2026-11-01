@@ -19,9 +19,9 @@ export async function byItemNo(no) {
 const SHAPES = [
   [/bulb|battery|cable|remote|hook\b|knob|cover\b|slipcover/, 'accessory'],   // "Cover for 2-seat sofa" is not a sofa
   [/pendant/, 'pendant'],                                                     // lamps before tables/desks: "Table lamp"
-  [/ceiling/, 'ceillamp'],
+  [/ceiling|spotlight/, 'ceillamp'],
   [/floor\/|floor lamp|uplighter/, 'floorlamp'],
-  [/lamp|lighting|\blight\b/, 'tablelamp'],
+  [/lamp|lighting|\blight\b|led strip/, 'tablelamp'],
   [/mattress|topper/, 'mattress'],
   [/sofa|settee|chaise/, 'sofa'],
   [/bed frame|divan|day-?bed|bunk|loft bed|bed with|^bed\b|upholstered bed|bed$/, 'bed'],

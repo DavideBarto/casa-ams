@@ -251,7 +251,8 @@ function select(id, fly = false) {
     if (mode === 'top') flyTo(new THREE.Vector3(c.x, Math.max(size * 2.4, 4.5), c.z + 0.01), new THREE.Vector3(c.x, 0, c.z));
     else flyTo(c.clone().add(new THREE.Vector3(-0.45, 0.8, 0.6).normalize().multiplyScalar(size * 1.8 + 1.6)), c);
   }
-  applyVisibility(); drawOverlay(); renderCard(); renderList(); renderResults();
+  applyVisibility(); drawOverlay(); renderCard(); renderList();
+  if (!$('#pane-add').hidden) renderResults();   // swap buttons depend on the selection
 }
 
 function renderCard() {
@@ -307,18 +308,18 @@ card.addEventListener('click', e => {
 card.addEventListener('change', e => {
   const it = selected && get(selected); if (!it || !e.target.id?.startsWith('sz-')) return;
   const v = +e.target.value, k = e.target.id.slice(3);
-  if (k !== 'c' && !(v >= 0)) return renderCard();
+  if (k !== 'c' && (e.target.value === '' || !(v >= 0))) return renderCard();   // an emptied field is not 0
   remember();
   if (k === 'q') it.qty = Math.max(1, Math.round(v));
   else if (k === 'c') it.color = e.target.value;
   else { const key = { w: 'w', d: 'd', h: 'h', e: 'elev' }[k]; it[key] = k === 'e' ? Math.max(0, v * 10) : Math.max(10, v * 10); if (k !== 'e' && !it.custom) it.edited = true; }
-  renderItem(it); changed(); select(it.uid);
+  renderItem(it); changed();
 });
 
 function rotate(it, delta) {
   remember();
   it.rot = (((it.rot || 0) + delta) % 360 + 360) % 360;
-  renderItem(it); changed(); select(it.uid);
+  renderItem(it); changed();
 }
 function replaceWith(old, product, variants) {
   remember();
@@ -410,7 +411,7 @@ window.addEventListener('keydown', e => {
     e.preventDefault();
     const step = e.shiftKey ? 100 : 10, dx = { ArrowLeft: -step, ArrowRight: step }[e.key] || 0, dy = { ArrowUp: -step, ArrowDown: step }[e.key] || 0;
     if (!e.repeat) remember();
-    it.x += dx; it.y += dy; placeView(it); changed(); select(it.uid);
+    it.x += dx; it.y += dy; placeView(it); changed();
   }
 });
 window.addEventListener('keyup', e => walk.keys.delete(KEYS[e.code]));
@@ -491,9 +492,10 @@ $('#refresh').addEventListener('click', async e => {
     await Promise.all(nos.slice(i, i + 4).map(async no => {
       try {
         const p = await byItemNo(no);
-        if (!p) { failed++; return; }
+        const price = p?.salesPrice?.numeral;
+        if (typeof price !== 'number') { failed++; return; }
         for (const it of items().filter(x => x.itemNo === no)) {
-          if (it.price !== p.salesPrice.numeral) { changedCount++; it.price = p.salesPrice.numeral; }
+          if (it.price !== price) { changedCount++; it.price = price; }
         }
       } catch { failed++; }
     }));
@@ -647,7 +649,9 @@ function importLayout(data, fallbackName) {
   addLayout(String(data.name || fallbackName).slice(0, 60), data.items.slice(0, 300).map(cleanItem), typeof data.budget === 'number' && data.budget >= 0 ? data.budget : 2500);
 }
 $('#l-share').addEventListener('click', async () => {
-  const url = `${location.origin}${location.pathname}#plan=${await pack(packable())}`;
+  let url;
+  try { url = `${location.origin}${location.pathname}#plan=${await pack(packable())}`; }
+  catch { return toast("This browser can't make share links. Use Download file instead."); }
   try { await navigator.clipboard.writeText(url); toast('Link copied. Opening it loads this layout as a new copy.'); }
   catch { prompt('Copy this link:', url); }
 });
@@ -733,8 +737,11 @@ function frame() {
 }
 
 // a shared link opens as a new layout, also when pasted into an open tab
+const openedLinks = new Set();   // Back to an already-imported link must not import it again
 async function openSharedLink() {
   if (!location.hash.startsWith('#plan=')) return;
+  if (openedLinks.has(location.hash)) return history.replaceState(null, '', location.pathname);
+  openedLinks.add(location.hash);
   try { importLayout(await unpack(location.hash.slice(6)), 'Shared plan'); setTimeout(() => toast('Shared layout loaded as a new copy.'), 300); }
   catch { setTimeout(() => toast("That link doesn't contain a valid layout."), 300); }
   history.replaceState(null, '', location.pathname);

@@ -67,9 +67,9 @@ def build_dims():
                 print("search failed", q, sort, e, file=sys.stderr)
     for spec in LAYOUT:
         if spec["no"] not in products:
-            hits = search(spec["no"], 2)
+            hits = [p for p in search(spec["no"], 3) if p["itemNo"] == spec["no"]]
             if hits:
-                products[hits[0]["itemNo"]] = hits[0]
+                products[spec["no"]] = hits[0]
     print(f"{len(products)} products, fetching measurements…", file=sys.stderr)
 
     dims = {}
