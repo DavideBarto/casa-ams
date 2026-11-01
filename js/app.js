@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildApartment, ROOMS, DOORS, BOUNDS } from './apartment.js';
-import { buildShape } from './shapes.js';
+import { buildShape, HUNG } from './shapes.js';
 import { checkLayout, gaps, footprint, corners, clearanceZones, solid, roomOf, aabb, DECOR } from './fit.js';
 import { search, byItemNo, toItem, variantProduct, articleNo, thumb, uid, sizeOf, classify } from './ikea.js';
 
@@ -15,7 +15,6 @@ const money = euros => eur.format(euros);
 const lineCents = it => Math.round((it.price || 0) * 100) * (it.qty || 1);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const ikeaUrl = u => (typeof u === 'string' && u.startsWith('https://www.ikea.com/') ? u : '');
-const HUNG = new Set(['pendant', 'ceillamp', 'rod', 'curtain']);
 
 // ---------- data ----------
 const [dims, seed] = await Promise.all([fetch('data/dims.json').then(r => r.json()), fetch('data/default-layout.json').then(r => r.json())]);
@@ -319,7 +318,7 @@ card.addEventListener('change', e => {
 function rotate(it, delta) {
   remember();
   it.rot = (((it.rot || 0) + delta) % 360 + 360) % 360;
-  placeView(it); renderItem(it); changed(); select(it.uid);
+  renderItem(it); changed(); select(it.uid);
 }
 function replaceWith(old, product, variants) {
   remember();
@@ -390,7 +389,10 @@ renderer.domElement.addEventListener('pointerup', e => {
   else if (click) select(hit(e));
   press = null;
 });
-renderer.domElement.addEventListener('pointercancel', () => { if (press?.drag) controls.enabled = mode !== 'walk'; press = null; });
+renderer.domElement.addEventListener('pointercancel', () => {
+  if (press?.drag) { controls.enabled = mode !== 'walk'; if (press.drag.moved) changed(); }
+  press = null;
+});
 
 const KEYS = { KeyW: 'f', ArrowUp: 'f', KeyS: 'b', ArrowDown: 'b', KeyA: 'sl', KeyD: 'sr', ArrowLeft: 'l', ArrowRight: 'r', KeyQ: 'l', KeyE: 'r' };
 window.addEventListener('keydown', e => {
@@ -401,7 +403,7 @@ window.addEventListener('keydown', e => {
   if (mode === 'walk' && KEYS[e.code]) { walk.keys.add(KEYS[e.code]); e.preventDefault(); return; }
   if (e.key === 'Escape') return select(null);
   const it = selected && get(selected); if (!it || it.placed === false) return;
-  if (e.key === 'r' || e.key === 'R') rotate(it, e.shiftKey ? -90 : 90);
+  if ((e.key === 'r' || e.key === 'R') && !mod) rotate(it, e.shiftKey ? -90 : 90);   // leave Ctrl/Cmd+R to the browser
   else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); card.querySelector('[data-act="del"]')?.click(); }
   else if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); card.querySelector('[data-act="dup"]')?.click(); }
   else if (e.key.startsWith('Arrow')) {
@@ -502,7 +504,7 @@ $('#refresh').addEventListener('click', async e => {
 });
 
 // ---------- panel: add & swap ----------
-const results = { q: '', size: 24, products: [], total: 0, swapping: null, loading: false, error: '' };
+const results = { q: '', size: 24, products: [], total: 0, swapping: null, loading: false, error: '', req: 0 };
 const CHIPS = ['Sofa', 'Armchair', 'Bed frame', 'Mattress', 'Wardrobe', 'Chest of drawers', 'Bedside table', 'Desk', 'Office chair', 'Dining table',
   'Dining chair', 'Coffee table', 'TV bench', 'Bookcase', 'Shelving unit', 'Sideboard', 'Shoe cabinet', 'Floor lamp', 'Pendant lamp', 'Rug', 'Curtains', 'Mirror', 'Outdoor furniture', 'Plant pot'];
 $('#chips').innerHTML = CHIPS.map(c => `<button type="button" data-q="${esc(c)}">${esc(c)}</button>`).join('');
@@ -513,13 +515,15 @@ $('#more').addEventListener('click', () => runSearch(true));
 
 async function runSearch(more = false) {
   const q = $('#q').value.trim(); if (!q) return;
+  const req = ++results.req;   // only the latest request may write results (query, sort or page can change mid-flight)
   Object.assign(results, { q, size: more ? results.size + 24 : 24, loading: true, error: '' });
   renderResults();
   try {
     const r = await search(q, { size: results.size, sort: $('#sort').value || undefined });
-    if (q !== results.q) return;
+    if (req !== results.req) return;
     Object.assign(results, { products: r.products, total: r.total });
   } catch {
+    if (req !== results.req) return;
     results.error = "Couldn't reach IKEA.nl. Check your connection and try again.";
   }
   results.loading = false;
@@ -535,7 +539,7 @@ function fitBadge(p) {
   const s = results.swapping && get(results.swapping);
   if (!s || s.placed === false) return '';
   const shape = classify(p.typeName), size = sizeOf(p, shape, dims);
-  if (!size.exact && !p.itemMeasureReferenceText) return '';
+  if (!size.known) return '';
   const room = roomFor(s), w = room.sideways ? size.d : size.w, d = room.sideways ? size.w : size.d;
   const over = Math.max(w - room.x, d - room.y);
   return over <= 0 ? '<span class="badge ok">Fits here</span>' : `<span class="badge warn">${Math.ceil(over / 10)} cm too big</span>`;
@@ -640,7 +644,7 @@ async function unpack(str) {
 }
 function importLayout(data, fallbackName) {
   if (!Array.isArray(data?.items)) throw new Error('not a layout');
-  addLayout(String(data.name || fallbackName).slice(0, 60), data.items.slice(0, 300).map(cleanItem), Math.max(0, +data.budget || 2500));
+  addLayout(String(data.name || fallbackName).slice(0, 60), data.items.slice(0, 300).map(cleanItem), typeof data.budget === 'number' && data.budget >= 0 ? data.budget : 2500);
 }
 $('#l-share').addEventListener('click', async () => {
   const url = `${location.origin}${location.pathname}#plan=${await pack(packable())}`;

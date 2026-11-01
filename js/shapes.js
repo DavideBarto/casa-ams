@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { chairCount } from './fit.js';
 
 export const H = 2600;   // ceiling height (assumed)
+export const HUNG = new Set(['pendant', 'ceillamp', 'rod', 'curtain']);   // hang from the ceiling, ignore elevation
 const m = v => v / 1000;
 const mats = new Map();
 export function M(color, o = {}) {
@@ -190,7 +191,7 @@ const B = {
 export function buildShape(it) {
   const g = new THREE.Group();
   const inner = new THREE.Group();
-  inner.position.y = ['pendant', 'ceillamp', 'rod', 'curtain'].includes(it.shape) ? 0 : m(it.elev || 0);   // hung pieces ignore elevation
+  inner.position.y = HUNG.has(it.shape) ? 0 : m(it.elev || 0);
   (B[it.shape] || B.box)(inner, it);
   g.add(inner);
   g.position.set(m(it.x), 0, m(it.y));

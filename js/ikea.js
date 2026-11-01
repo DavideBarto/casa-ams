@@ -17,7 +17,11 @@ export async function byItemNo(no) {
 
 // Order matters: the first match wins ("TV bench" is storage, not a bench; "Bedside table" isn't a dining table).
 const SHAPES = [
-  [/bulb|battery|cable|remote|hook\b|knob/, 'accessory'],
+  [/bulb|battery|cable|remote|hook\b|knob|cover\b|slipcover/, 'accessory'],   // "Cover for 2-seat sofa" is not a sofa
+  [/pendant/, 'pendant'],                                                     // lamps before tables/desks: "Table lamp"
+  [/ceiling/, 'ceillamp'],
+  [/floor\/|floor lamp|uplighter/, 'floorlamp'],
+  [/lamp|lighting|\blight\b/, 'tablelamp'],
   [/mattress|topper/, 'mattress'],
   [/sofa|settee|chaise/, 'sofa'],
   [/bed frame|divan|day-?bed|bunk|loft bed|bed with|^bed\b|upholstered bed|bed$/, 'bed'],
@@ -36,10 +40,6 @@ const SHAPES = [
   [/bench/, 'bench'],
   [/chair/, 'chair'],
   [/bookcase|shelving|shelf unit|shelf|display/, 'shelf'],
-  [/pendant/, 'pendant'],
-  [/ceiling/, 'ceillamp'],
-  [/floor|uplighter/, 'floorlamp'],
-  [/lamp|light/, 'tablelamp'],
   [/rug|mat\b/, 'rug'],
   [/curtain rod|rod|rail|curtain wire/, 'rod'],
   [/curtain|blind/, 'curtain'],
@@ -100,9 +100,10 @@ function fromText(text = '', shape) {
 export function sizeOf(product, shape, dims) {
   const [dw, dd, dh] = defaultSize(shape);
   const measured = dims?.[product.itemNo] && fromMeasures(dims[product.itemNo], shape);
-  const s = measured || fromText(product.itemMeasureReferenceText, shape) || {};
+  const text = fromText(product.itemMeasureReferenceText, shape);
+  const s = measured || text || {};
   const exact = !!measured || (!!s.w && !!s.d && !!s.h);
-  return { w: s.w || dw, d: s.d || dd, h: s.h || dh, exact };
+  return { w: s.w || dw, d: s.d || dd, h: s.h || dh, exact, known: !!(measured || text) };   // known: not just a typical size
 }
 
 const WORDS = [
