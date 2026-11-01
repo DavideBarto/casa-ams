@@ -384,7 +384,7 @@ function focusItem(group) {
 let press = null;   // { x, y, drag?: { it, ox, oy, moved } , look?: true }
 // Capture phase on the stage, so this runs before the camera controls see the press and can be told to stand still.
 stage.addEventListener('pointerdown', e => {
-  if (e.target !== renderer.domElement) return;
+  if (e.target !== renderer.domElement || !e.isPrimary) return;   // extra fingers belong to pinch/pan
   press = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY };
   if (mode === 'walk') { press.look = true; renderer.domElement.setPointerCapture(e.pointerId); return; }
   const id = hit(e), it = id && get(id);
@@ -404,7 +404,7 @@ renderer.domElement.addEventListener('dblclick', e => {
   const id = hit(e), v = id && views.get(id);
   if (v) return focusItem(v.group);
   const p = floorAt(e);
-  if (p) controls.setTarget(p.x, 0, p.z, smooth());
+  if (p) controls.moveTo(p.x, 0, p.z, smooth());   // camera travels with it, so Plan stays top-down
 });
 renderer.domElement.addEventListener('pointermove', e => {
   if (!press) return;
@@ -779,21 +779,22 @@ function changed() {
 }
 
 // ---------- loop ----------
+let lowRes = false;   // drawing at 1x while the view moves
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;
+  if (!lowRes) renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(w, h, false); labelRenderer.setSize(w, h);
   camera.aspect = w / Math.max(h, 1); camera.updateProjectionMatrix();
   invalidate();
 }
 new ResizeObserver(resize).observe(stage);
+addEventListener('resize', resize);   // also fires when the window moves to a screen with another pixel ratio
 resize();
 
 // ?debug exposes the scene for automated screenshots (tests only)
 if (new URLSearchParams(location.search).has('debug')) window.casa = { THREE, renderer, scene, camera, controls, resize, items, get, renderAll, renderItem, runChecks, select, changed, labelRenderer, apt, furniture, applyVisibility, drawOverlay, checkLayout: () => checkLayout(items(), { walls: apt.walls, doors: DOORS, rooms: ROOMS }) };
 
 const clock = new THREE.Clock();
-const fullRes = Math.min(devicePixelRatio, 2);
-let lowRes = false;
 function frame() {
   requestAnimationFrame(frame);
   const dt = Math.min(clock.getDelta(), 0.05);
@@ -810,7 +811,7 @@ function frame() {
     camera.position.copy(walk.pos); camera.rotation.set(walk.pitch, walk.yaw, 0, 'YXZ');
   } else moving = controls.update(dt);
   // While the view moves, draw at 1× pixels (~30% cheaper frames); one sharp frame when it stops.
-  const active = moving || !!press?.drag?.moved;
+  const active = moving || !!press?.drag?.moved, fullRes = Math.min(devicePixelRatio, 2);   // read live: the window may change screens
   if (fullRes > 1 && active !== lowRes) { lowRes = active; renderer.setPixelRatio(active ? 1 : fullRes); resize(); }
   if (!moving && !dirty) return;
   dirty = false;
