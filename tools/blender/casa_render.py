@@ -84,12 +84,19 @@ def bsdf_of(mat):
     return next((n for n in mat.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'), None)
 
 
+UA = {'User-Agent': 'CasaAMS-Blender/1.0 (github.com/DavideBarto/casa-ams)'}   # Poly Haven asks apps to identify themselves
+
+
+def fetch(url):
+    return urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=30)
+
+
 def polyhaven(asset, out_dir, res='1k'):
     """Download a CC0 texture set from Poly Haven once; returns {'diff': path, 'nor': path, 'rough': path} or {}."""
     folder = os.path.join(out_dir, 'textures', asset)
     os.makedirs(folder, exist_ok=True)
     try:
-        with urllib.request.urlopen(f'https://api.polyhaven.com/files/{asset}', timeout=30) as r:
+        with fetch(f'https://api.polyhaven.com/files/{asset}') as r:
             files = json.load(r)
     except OSError as e:
         print(f'[casa] no texture download ({e}); keeping the planner texture')
@@ -102,7 +109,8 @@ def polyhaven(asset, out_dir, res='1k'):
         path = os.path.join(folder, os.path.basename(url))
         try:
             if not os.path.exists(path):
-                urllib.request.urlretrieve(url, path + '.part')
+                with fetch(url) as r, open(path + '.part', 'wb') as f:
+                    f.write(r.read())
                 os.replace(path + '.part', path)
             maps[key] = path
         except OSError as e:
