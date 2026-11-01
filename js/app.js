@@ -435,7 +435,8 @@ renderer.domElement.addEventListener('pointerup', e => {
   else if (click) select(hit(e));
   press = null;
 });
-renderer.domElement.addEventListener('pointercancel', () => {
+renderer.domElement.addEventListener('pointercancel', e => {
+  if (!e.isPrimary) return;
   if (press?.drag) { controls.enabled = mode !== 'walk'; if (press.drag.moved) changed(); }
   press = null;
 });
