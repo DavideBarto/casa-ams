@@ -21,7 +21,10 @@ The Layouts tab has **Download 3D model (.glb)**: the whole flat with named piec
 - Blender: `blender -b -P tools/blender/casa_render.py -- --glb casa-ams.glb --out renders` renders every room at
   morning, afternoon, sunset and night with Cycles, and saves `renders/casa-ams.blend` to explore (it has a README text block).
   Add `--no-render` to only build the scene. The floor texture comes from [Poly Haven](https://polyhaven.com) (CC0).
-- Unreal Engine 5: drag the .glb into the Content Browser (Interchange glTF import).
+- Unreal Engine 5: create a project from **Games › First Person**, enable the *Python Editor Script Plugin* and
+  *Sun Position Calculator* (Edit › Plugins), then **Tools › Execute Python Script** › `tools/unreal/casa_setup.py`.
+  It imports the newest `casa-ams-*.glb` from Downloads into a level with an Amsterdam sun and sky, clouds, fog,
+  a light in every lamp (tag `CasaLamp`) and a Player Start; press Play and walk with W A S D.
 
 ## Run locally
 
