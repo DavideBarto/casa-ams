@@ -1,0 +1,1378 @@
+[
+ {
+  "no": "40571248",
+  "x": 5400,
+  "y": 3625,
+  "rot": 90,
+  "product": {
+   "itemNo": "40571248",
+   "name": "SLATTUM",
+   "typeName": "Upholstered bed frame",
+   "validDesignText": "Vissle dark grey",
+   "itemMeasureReferenceText": "160x200 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/slattum-upholstered-bed-frame-vissle-dark-grey-40571248/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/slattum-upholstered-bed-frame-vissle-dark-grey__1259335_pe926650_s5.jpg",
+   "colors": [
+    {
+     "name": "grey",
+     "id": "10028",
+     "hex": "949494"
+    }
+   ],
+   "ratingValue": 3.8,
+   "ratingCount": 19,
+   "salesPrice": {
+    "numeral": 129.0
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "00571245",
+      "validDesignText": "Vissle dark grey",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/slattum-upholstered-bed-frame-vissle-dark-grey__1259335_pe926650_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/slattum-upholstered-bed-frame-vissle-dark-grey-00571245/",
+      "itemMeasureReferenceText": "140x200 cm",
+      "typeName": "Upholstered bed frame",
+      "name": "SLATTUM",
+      "salesPrice": {
+       "numeral": 99.99
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "40450623",
+  "x": 5400,
+  "y": 3625,
+  "rot": 90,
+  "product": {
+   "itemNo": "40450623",
+   "name": "VESTERÖY",
+   "typeName": "Pocket sprung mattress",
+   "validDesignText": "medium firm/light blue",
+   "itemMeasureReferenceText": "160x200 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/vesteroy-pocket-sprung-mattress-medium-firm-light-blue-40450623/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/vesteroy-pocket-sprung-mattress-medium-firm-light-blue__1579333_pe1034433_s5.jpg",
+   "colors": [
+    {
+     "name": "blue",
+     "id": "10007",
+     "hex": "0058a3"
+    },
+    {
+     "name": "white",
+     "id": "10156",
+     "hex": "ffffff"
+    }
+   ],
+   "ratingValue": 4.0,
+   "ratingCount": 265,
+   "salesPrice": {
+    "numeral": 159.0
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "00450615",
+      "validDesignText": "medium firm/light blue",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/vesteroy-pocket-sprung-mattress-medium-firm-light-blue__1579333_pe1034433_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/vesteroy-pocket-sprung-mattress-medium-firm-light-blue-00450615/",
+      "itemMeasureReferenceText": "140x200 cm",
+      "typeName": "Pocket sprung mattress",
+      "name": "VESTERÖY",
+      "salesPrice": {
+       "numeral": 139.0
+      }
+     },
+     {
+      "itemNo": "40450500",
+      "validDesignText": "medium firm/light blue",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/vesteroy-pocket-sprung-mattress-medium-firm-light-blue__1579327_pe1034430_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/vesteroy-pocket-sprung-mattress-medium-firm-light-blue-40450500/",
+      "itemMeasureReferenceText": "90x200 cm",
+      "typeName": "Pocket sprung mattress",
+      "name": "VESTERÖY",
+      "salesPrice": {
+       "numeral": 99.0
+      }
+     },
+     {
+      "itemNo": "30450609",
+      "validDesignText": "firm/light blue",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/vesteroy-pocket-sprung-mattress-firm-light-blue__1579333_pe1034433_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/vesteroy-pocket-sprung-mattress-firm-light-blue-30450609/",
+      "itemMeasureReferenceText": "140x200 cm",
+      "typeName": "Pocket sprung mattress",
+      "name": "VESTERÖY",
+      "salesPrice": {
+       "numeral": 139.0
+      }
+     },
+     {
+      "itemNo": "40450618",
+      "validDesignText": "firm/light blue",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/vesteroy-pocket-sprung-mattress-firm-light-blue__1579333_pe1034433_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/vesteroy-pocket-sprung-mattress-firm-light-blue-40450618/",
+      "itemMeasureReferenceText": "160x200 cm",
+      "typeName": "Pocket sprung mattress",
+      "name": "VESTERÖY",
+      "salesPrice": {
+       "numeral": 159.0
+      }
+     },
+     {
+      "itemNo": "00450601",
+      "validDesignText": "medium firm/light blue",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/vesteroy-pocket-sprung-mattress-medium-firm-light-blue__1579327_pe1034430_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/vesteroy-pocket-sprung-mattress-medium-firm-light-blue-00450601/",
+      "itemMeasureReferenceText": "80x200 cm",
+      "typeName": "Pocket sprung mattress",
+      "name": "VESTERÖY",
+      "salesPrice": {
+       "numeral": 89.0
+      }
+     },
+     {
+      "itemNo": "00450502",
+      "validDesignText": "firm/light blue",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/vesteroy-pocket-sprung-mattress-firm-light-blue__1579327_pe1034430_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/vesteroy-pocket-sprung-mattress-firm-light-blue-00450502/",
+      "itemMeasureReferenceText": "90x200 cm",
+      "typeName": "Pocket sprung mattress",
+      "name": "VESTERÖY",
+      "salesPrice": {
+       "numeral": 99.0
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "40407922",
+  "x": 4620,
+  "y": 1805,
+  "rot": 90,
+  "product": {
+   "itemNo": "40407922",
+   "name": "BRIMNES",
+   "typeName": "Wardrobe with 3 doors",
+   "validDesignText": "white",
+   "itemMeasureReferenceText": "117x50x190 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/brimnes-wardrobe-with-3-doors-white-40407922/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/brimnes-wardrobe-with-3-doors-white__0176787_pe329567_s5.jpg",
+   "colors": [
+    {
+     "name": "white",
+     "id": "10156",
+     "hex": "ffffff"
+    }
+   ],
+   "ratingValue": 4.5,
+   "ratingCount": 162,
+   "salesPrice": {
+    "numeral": 169.0
+   },
+   "gprDescription": {
+    "variants": []
+   }
+  }
+ },
+ {
+  "no": "20569977",
+  "x": 4580,
+  "y": 2598,
+  "rot": 0,
+  "product": {
+   "itemNo": "20569977",
+   "name": "KNARREVIK",
+   "typeName": "Bedside table",
+   "validDesignText": "black",
+   "itemMeasureReferenceText": "42x34x52 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/knarrevik-bedside-table-black-20569977/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/knarrevik-bedside-table-black__1255278_pe924478_s5.jpg",
+   "colors": [
+    {
+     "name": "black",
+     "id": "10139",
+     "hex": "000000"
+    }
+   ],
+   "ratingValue": 4.9,
+   "ratingCount": 7,
+   "salesPrice": {
+    "numeral": 11.99
+   },
+   "gprDescription": {
+    "variants": []
+   }
+  }
+ },
+ {
+  "no": "20569977",
+  "x": 4580,
+  "y": 4633,
+  "rot": 180,
+  "product": {
+   "itemNo": "20569977",
+   "name": "KNARREVIK",
+   "typeName": "Bedside table",
+   "validDesignText": "black",
+   "itemMeasureReferenceText": "42x34x52 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/knarrevik-bedside-table-black-20569977/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/knarrevik-bedside-table-black__1255278_pe924478_s5.jpg",
+   "colors": [
+    {
+     "name": "black",
+     "id": "10139",
+     "hex": "000000"
+    }
+   ],
+   "ratingValue": 4.9,
+   "ratingCount": 7,
+   "salesPrice": {
+    "numeral": 11.99
+   },
+   "gprDescription": {
+    "variants": []
+   }
+  }
+ },
+ {
+  "no": "69416817",
+  "x": 4670,
+  "y": 5440,
+  "rot": 90,
+  "side": -1,
+  "product": {
+   "itemNo": "69416817",
+   "name": "LAGKAPTEN / ALEX",
+   "typeName": "Desk",
+   "validDesignText": "white",
+   "itemMeasureReferenceText": "120x60 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/lagkapten-alex-desk-white-s69416817/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/lagkapten-alex-desk-white__0977483_pe813612_s5.jpg",
+   "colors": [
+    {
+     "name": "white",
+     "id": "10156",
+     "hex": "ffffff"
+    }
+   ],
+   "ratingValue": 4.1,
+   "ratingCount": 21,
+   "salesPrice": {
+    "numeral": 94.99
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "09416962",
+      "validDesignText": "white stained oak effect/white",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/lagkapten-alex-desk-white-stained-oak-effect-white__0977487_pe813615_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/lagkapten-alex-desk-white-stained-oak-effect-white-s09416962/",
+      "itemMeasureReferenceText": "120x60 cm",
+      "typeName": "Desk",
+      "name": "LAGKAPTEN / ALEX",
+      "salesPrice": {
+       "numeral": 99.99
+      }
+     },
+     {
+      "itemNo": "39584930",
+      "validDesignText": "grey/wood effect",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/lagkapten-alex-desk-grey-wood-effect__1432271_pe982732_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/lagkapten-alex-desk-grey-wood-effect-s39584930/",
+      "itemMeasureReferenceText": "120x60 cm",
+      "typeName": "Desk",
+      "name": "LAGKAPTEN / ALEX",
+      "salesPrice": {
+       "numeral": 99.99
+      }
+     },
+     {
+      "itemNo": "29638113",
+      "validDesignText": "white stained/oak effect white",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/lagkapten-desk-white-stained-oak-effect-white__1557860_pe1024760_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/lagkapten-desk-white-stained-oak-effect-white-s29638113/",
+      "itemMeasureReferenceText": "120x60 cm",
+      "typeName": "Desk",
+      "name": "LAGKAPTEN",
+      "salesPrice": {
+       "numeral": 99.99
+      }
+     },
+     {
+      "itemNo": "19584926",
+      "validDesignText": "grey/wood effect black",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/lagkapten-alex-desk-grey-wood-effect-black__1432266_pe982730_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/lagkapten-alex-desk-grey-wood-effect-black-s19584926/",
+      "itemMeasureReferenceText": "120x60 cm",
+      "typeName": "Desk",
+      "name": "LAGKAPTEN / ALEX",
+      "salesPrice": {
+       "numeral": 99.99
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "70261150",
+  "x": 5330,
+  "y": 5490,
+  "rot": -90,
+  "product": {
+   "itemNo": "70261150",
+   "name": "MARKUS",
+   "typeName": "Office chair",
+   "validDesignText": "Vissle dark grey",
+   "itemMeasureReferenceText": "Medium",
+   "pipUrl": "https://www.ikea.com/nl/en/p/markus-office-chair-vissle-dark-grey-70261150/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/markus-office-chair-vissle-dark-grey__0724714_pe734597_s5.jpg",
+   "colors": [
+    {
+     "name": "grey",
+     "id": "10028",
+     "hex": "949494"
+    }
+   ],
+   "ratingValue": 4.2,
+   "ratingCount": 141,
+   "salesPrice": {
+    "numeral": 139.0
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "10521858",
+      "validDesignText": "Vissle light grey",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/markus-office-chair-vissle-light-grey__1101440_pe866425_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/markus-office-chair-vissle-light-grey-10521858/",
+      "itemMeasureReferenceText": "Medium",
+      "typeName": "Office chair",
+      "name": "MARKUS",
+      "salesPrice": {
+       "numeral": 139.0
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "50355395",
+  "x": 4410,
+  "y": 4960,
+  "rot": 90,
+  "elev": 730,
+  "product": {
+   "itemNo": "50355395",
+   "name": "TERTIAL",
+   "typeName": "Work lamp",
+   "validDesignText": "dark grey",
+   "itemMeasureReferenceText": "",
+   "pipUrl": "https://www.ikea.com/nl/en/p/tertial-work-lamp-dark-grey-50355395/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/tertial-work-lamp-dark-grey__0609306_pe684440_s5.jpg",
+   "colors": [
+    {
+     "name": "grey",
+     "id": "10028",
+     "hex": "949494"
+    }
+   ],
+   "ratingValue": 4.6,
+   "ratingCount": 137,
+   "salesPrice": {
+    "numeral": 9.99
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "70355455",
+      "validDesignText": "white",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/tertial-work-lamp-white__0609308_pe684439_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/tertial-work-lamp-white-70355455/",
+      "itemMeasureReferenceText": "",
+      "typeName": "Work lamp",
+      "name": "TERTIAL",
+      "salesPrice": {
+       "numeral": 9.99
+      }
+     },
+     {
+      "itemNo": "20504288",
+      "validDesignText": "light blue",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/tertial-work-lamp-light-blue__0957547_pe822319_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/tertial-work-lamp-light-blue-20504288/",
+      "itemMeasureReferenceText": "",
+      "typeName": "Work lamp",
+      "name": "TERTIAL",
+      "salesPrice": {
+       "numeral": 9.99
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "90346752",
+  "x": 4700,
+  "y": 6095,
+  "rot": 180,
+  "product": {
+   "itemNo": "90346752",
+   "name": "MAJGULL",
+   "typeName": "Room darkening curtains, 1 pair",
+   "validDesignText": "light grey/with heading tape",
+   "itemMeasureReferenceText": "145x300 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/majgull-room-darkening-curtains-1-pair-light-grey-with-heading-tape-90346752/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/majgull-room-darkening-curtains-1-pair-light-grey-with-heading-tape__0598870_pe677879_s5.jpg",
+   "colors": [
+    {
+     "name": "grey",
+     "id": "10028",
+     "hex": "949494"
+    }
+   ],
+   "ratingValue": 4.1,
+   "ratingCount": 41,
+   "salesPrice": {
+    "numeral": 39.99
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "70586026",
+      "validDesignText": "beige-yellow/with heading tape",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/majgull-room-darkening-curtains-1-pair-beige-yellow-with-heading-tape__1279712_pe931490_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/majgull-room-darkening-curtains-1-pair-beige-yellow-with-heading-tape-70586026/",
+      "itemMeasureReferenceText": "145x300 cm",
+      "typeName": "Room darkening curtains, 1 pair",
+      "name": "MAJGULL",
+      "salesPrice": {
+       "numeral": 39.99
+      }
+     },
+     {
+      "itemNo": "60586022",
+      "validDesignText": "dark grey-turquoise/with heading tape",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/majgull-room-darkening-curtains-1-pair-dark-grey-turquoise-with-heading-tape__1279753_pe931522_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/majgull-room-darkening-curtains-1-pair-dark-grey-turquoise-with-heading-tape-60586022/",
+      "itemMeasureReferenceText": "145x300 cm",
+      "typeName": "Room darkening curtains, 1 pair",
+      "name": "MAJGULL",
+      "salesPrice": {
+       "numeral": 39.99
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "90346752",
+  "x": 6620,
+  "y": 6095,
+  "rot": 180,
+  "product": {
+   "itemNo": "90346752",
+   "name": "MAJGULL",
+   "typeName": "Room darkening curtains, 1 pair",
+   "validDesignText": "light grey/with heading tape",
+   "itemMeasureReferenceText": "145x300 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/majgull-room-darkening-curtains-1-pair-light-grey-with-heading-tape-90346752/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/majgull-room-darkening-curtains-1-pair-light-grey-with-heading-tape__0598870_pe677879_s5.jpg",
+   "colors": [
+    {
+     "name": "grey",
+     "id": "10028",
+     "hex": "949494"
+    }
+   ],
+   "ratingValue": 4.1,
+   "ratingCount": 41,
+   "salesPrice": {
+    "numeral": 39.99
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "70586026",
+      "validDesignText": "beige-yellow/with heading tape",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/majgull-room-darkening-curtains-1-pair-beige-yellow-with-heading-tape__1279712_pe931490_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/majgull-room-darkening-curtains-1-pair-beige-yellow-with-heading-tape-70586026/",
+      "itemMeasureReferenceText": "145x300 cm",
+      "typeName": "Room darkening curtains, 1 pair",
+      "name": "MAJGULL",
+      "salesPrice": {
+       "numeral": 39.99
+      }
+     },
+     {
+      "itemNo": "60586022",
+      "validDesignText": "dark grey-turquoise/with heading tape",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/majgull-room-darkening-curtains-1-pair-dark-grey-turquoise-with-heading-tape__1279753_pe931522_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/majgull-room-darkening-curtains-1-pair-dark-grey-turquoise-with-heading-tape-60586022/",
+      "itemMeasureReferenceText": "145x300 cm",
+      "typeName": "Room darkening curtains, 1 pair",
+      "name": "MAJGULL",
+      "salesPrice": {
+       "numeral": 39.99
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "09634074",
+  "x": 5660,
+  "y": 6115,
+  "rot": 0,
+  "w": 2560,
+  "product": {
+   "itemNo": "09634074",
+   "name": "RÄCKA",
+   "typeName": "Curtain rod combination",
+   "validDesignText": "with wall/ceiling brackets/with finials white",
+   "itemMeasureReferenceText": "210-385 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/racka-curtain-rod-combination-with-wall-ceiling-brackets-with-finials-white-s09634074/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/racka-curtain-rod-combination-with-wall-ceiling-brackets-with-finials-white__1560685_pe1025440_s5.jpg",
+   "colors": [],
+   "ratingValue": null,
+   "ratingCount": null,
+   "salesPrice": {
+    "numeral": 20.94
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "49634067",
+      "validDesignText": "with wall/ceiling brackets/with finials black",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/racka-curtain-rod-combination-with-wall-ceiling-brackets-with-finials-black__1560692_pe1025441_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/racka-curtain-rod-combination-with-wall-ceiling-brackets-with-finials-black-s49634067/",
+      "itemMeasureReferenceText": "210-385 cm",
+      "typeName": "Curtain rod combination",
+      "name": "RÄCKA",
+      "salesPrice": {
+       "numeral": 20.94
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "50599402",
+  "x": 5870,
+  "y": 3600,
+  "rot": 0,
+  "product": {
+   "itemNo": "50599402",
+   "name": "KÄRRNOCKA",
+   "typeName": "Ceiling lamp",
+   "validDesignText": "white",
+   "itemMeasureReferenceText": "37 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/karrnocka-ceiling-lamp-white-50599402/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/karrnocka-ceiling-lamp-white__1456472_pe992341_s5.jpg",
+   "colors": [
+    {
+     "name": "white",
+     "id": "10156",
+     "hex": "ffffff"
+    }
+   ],
+   "ratingValue": 5.0,
+   "ratingCount": 1,
+   "salesPrice": {
+    "numeral": 19.99
+   },
+   "gprDescription": {
+    "variants": []
+   }
+  }
+ },
+ {
+  "no": "50341148",
+  "x": 1640,
+  "y": 3125,
+  "rot": 180,
+  "product": {
+   "itemNo": "50341148",
+   "name": "FRIHETEN",
+   "typeName": "Three-seat sofa-bed",
+   "validDesignText": "Skiftebo dark grey",
+   "itemMeasureReferenceText": "",
+   "pipUrl": "https://www.ikea.com/nl/en/p/friheten-three-seat-sofa-bed-skiftebo-dark-grey-50341148/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/friheten-three-seat-sofa-bed-skiftebo-dark-grey__0525504_pe644868_s5.jpg",
+   "colors": [
+    {
+     "name": "grey",
+     "id": "10028",
+     "hex": "949494"
+    }
+   ],
+   "ratingValue": 4.1,
+   "ratingCount": 68,
+   "salesPrice": {
+    "numeral": 399.0
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "60551225",
+      "validDesignText": "Faringe light grey",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/friheten-3-seat-sofa-bed-faringe-light-grey__1320694_pe941315_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/friheten-3-seat-sofa-bed-faringe-light-grey-60551225/",
+      "itemMeasureReferenceText": "",
+      "typeName": "3-seat sofa-bed",
+      "name": "FRIHETEN",
+      "salesPrice": {
+       "numeral": 499.0
+      }
+     },
+     {
+      "itemNo": "90551224",
+      "validDesignText": "Faringe brown-orange",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/friheten-3-seat-sofa-bed-faringe-brown-orange__1360646_pe954547_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/friheten-3-seat-sofa-bed-faringe-brown-orange-90551224/",
+      "itemMeasureReferenceText": "",
+      "typeName": "3-seat sofa-bed",
+      "name": "FRIHETEN",
+      "salesPrice": {
+       "numeral": 499.0
+      }
+     },
+     {
+      "itemNo": "20341135",
+      "validDesignText": "Bomstad black",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/friheten-three-seat-sofa-bed-bomstad-black__0325717_pe523061_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/friheten-three-seat-sofa-bed-bomstad-black-20341135/",
+      "itemMeasureReferenceText": "",
+      "typeName": "Three-seat sofa-bed",
+      "name": "FRIHETEN",
+      "salesPrice": {
+       "numeral": 599.0
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "00474070",
+  "x": 1900,
+  "y": 220,
+  "rot": 0,
+  "product": {
+   "itemNo": "00474070",
+   "name": "BESTÅ",
+   "typeName": "TV bench",
+   "validDesignText": "white",
+   "itemMeasureReferenceText": "180x40x38 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/besta-tv-bench-white-00474070/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/besta-tv-bench-white__0376997_pe516837_s5.jpg",
+   "colors": [],
+   "ratingValue": 4.4,
+   "ratingCount": 86,
+   "salesPrice": {
+    "numeral": 60.0
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "70474062",
+      "validDesignText": "black-brown",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/besta-tv-bench-black-brown__0316226_pe516834_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/besta-tv-bench-black-brown-70474062/",
+      "itemMeasureReferenceText": "180x40x38 cm",
+      "typeName": "TV bench",
+      "name": "BESTÅ",
+      "salesPrice": {
+       "numeral": 60.0
+      }
+     },
+     {
+      "itemNo": "80299874",
+      "validDesignText": "black-brown",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/besta-tv-bench-black-brown__0316238_pe516829_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/besta-tv-bench-black-brown-80299874/",
+      "itemMeasureReferenceText": "180x40x64 cm",
+      "typeName": "TV bench",
+      "name": "BESTÅ",
+      "salesPrice": {
+       "numeral": 75.0
+      }
+     },
+     {
+      "itemNo": "90294512",
+      "validDesignText": "black-brown",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/besta-tv-bench-black-brown__0316202_pe516844_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/besta-tv-bench-black-brown-90294512/",
+      "itemMeasureReferenceText": "120x40x38 cm",
+      "typeName": "TV bench",
+      "name": "BESTÅ",
+      "salesPrice": {
+       "numeral": 45.0
+      }
+     },
+     {
+      "itemNo": "40299885",
+      "validDesignText": "black-brown",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/besta-tv-bench-black-brown__0316215_pe516839_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/besta-tv-bench-black-brown-40299885/",
+      "itemMeasureReferenceText": "120x40x64 cm",
+      "typeName": "TV bench",
+      "name": "BESTÅ",
+      "salesPrice": {
+       "numeral": 60.0
+      }
+     },
+     {
+      "itemNo": "60474072",
+      "validDesignText": "white stained oak effect",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/besta-tv-bench-white-stained-oak-effect__0316235_pe516838_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/besta-tv-bench-white-stained-oak-effect-60474072/",
+      "itemMeasureReferenceText": "180x40x38 cm",
+      "typeName": "TV bench",
+      "name": "BESTÅ",
+      "salesPrice": {
+       "numeral": 60.0
+      }
+     },
+     {
+      "itemNo": "80294503",
+      "validDesignText": "white",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/besta-tv-bench-white__0384984_pe557581_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/besta-tv-bench-white-80294503/",
+      "itemMeasureReferenceText": "120x40x38 cm",
+      "typeName": "TV bench",
+      "name": "BESTÅ",
+      "salesPrice": {
+       "numeral": 45.0
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "50319029",
+  "x": 1700,
+  "y": 1900,
+  "rot": 0,
+  "product": {
+   "itemNo": "50319029",
+   "name": "LACK",
+   "typeName": "Coffee table",
+   "validDesignText": "white stained oak effect",
+   "itemMeasureReferenceText": "90x55 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/lack-coffee-table-white-stained-oak-effect-50319029/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/lack-coffee-table-white-stained-oak-effect__0411538_pe570463_s5.jpg",
+   "colors": [
+    {
+     "name": "beige",
+     "id": "10003",
+     "hex": "f4f3d7"
+    }
+   ],
+   "ratingValue": 4.4,
+   "ratingCount": 169,
+   "salesPrice": {
+    "numeral": 19.99
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "40104294",
+      "validDesignText": "black-brown",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/lack-coffee-table-black-brown__57540_pe163122_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/lack-coffee-table-black-brown-40104294/",
+      "itemMeasureReferenceText": "90x55 cm",
+      "typeName": "Coffee table",
+      "name": "LACK",
+      "salesPrice": {
+       "numeral": 19.99
+      }
+     },
+     {
+      "itemNo": "90449905",
+      "validDesignText": "white",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/lack-coffee-table-white__0750652_pe746803_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/lack-coffee-table-white-90449905/",
+      "itemMeasureReferenceText": "90x55 cm",
+      "typeName": "Coffee table",
+      "name": "LACK",
+      "salesPrice": {
+       "numeral": 17.99
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "10425526",
+  "x": 1680,
+  "y": 2050,
+  "rot": 90,
+  "product": {
+   "itemNo": "10425526",
+   "name": "STOENSE",
+   "typeName": "Rug, low pile",
+   "validDesignText": "off-white",
+   "itemMeasureReferenceText": "133x195 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/stoense-rug-low-pile-off-white-10425526/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/stoense-rug-low-pile-off-white__0624373_pe691791_s5.jpg",
+   "colors": [
+    {
+     "name": "beige",
+     "id": "10003",
+     "hex": "f4f3d7"
+    },
+    {
+     "name": "white",
+     "id": "10156",
+     "hex": "ffffff"
+    }
+   ],
+   "ratingValue": 4.5,
+   "ratingCount": 531,
+   "salesPrice": {
+    "numeral": 59.99
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "00640673",
+      "validDesignText": "off-white",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/stoense-rug-low-pile-off-white__0624402_pe691814_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/stoense-rug-low-pile-off-white-00640673/",
+      "itemMeasureReferenceText": "240x350 cm",
+      "typeName": "Rug, low pile",
+      "name": "STOENSE",
+      "salesPrice": {
+       "numeral": 249.0
+      }
+     },
+     {
+      "itemNo": "20426808",
+      "validDesignText": "off-white",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/stoense-rug-low-pile-off-white__0624402_pe691814_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/stoense-rug-low-pile-off-white-20426808/",
+      "itemMeasureReferenceText": "200x300 cm",
+      "typeName": "Rug, low pile",
+      "name": "STOENSE",
+      "salesPrice": {
+       "numeral": 149.0
+      }
+     },
+     {
+      "itemNo": "50425529",
+      "validDesignText": "off-white",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/stoense-rug-low-pile-off-white__0624386_pe691799_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/stoense-rug-low-pile-off-white-50425529/",
+      "itemMeasureReferenceText": "170x240 cm",
+      "typeName": "Rug, low pile",
+      "name": "STOENSE",
+      "salesPrice": {
+       "numeral": 89.99
+      }
+     },
+     {
+      "itemNo": "30426836",
+      "validDesignText": "medium grey",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/stoense-rug-low-pile-medium-grey__0624399_pe691812_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/stoense-rug-low-pile-medium-grey-30426836/",
+      "itemMeasureReferenceText": "200x300 cm",
+      "typeName": "Rug, low pile",
+      "name": "STOENSE",
+      "salesPrice": {
+       "numeral": 149.0
+      }
+     },
+     {
+      "itemNo": "80607684",
+      "validDesignText": "beige",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/stoense-rug-low-pile-beige__1405718_pe970549_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/stoense-rug-low-pile-beige-80607684/",
+      "itemMeasureReferenceText": "200x300 cm",
+      "typeName": "Rug, low pile",
+      "name": "STOENSE",
+      "salesPrice": {
+       "numeral": 149.0
+      }
+     },
+     {
+      "itemNo": "10607668",
+      "validDesignText": "beige",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/stoense-rug-low-pile-beige__1405711_pe970547_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/stoense-rug-low-pile-beige-10607668/",
+      "itemMeasureReferenceText": "170x240 cm",
+      "typeName": "Rug, low pile",
+      "name": "STOENSE",
+      "salesPrice": {
+       "numeral": 89.99
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "00110640",
+  "x": 270,
+  "y": 3400,
+  "rot": 0,
+  "product": {
+   "itemNo": "00110640",
+   "name": "LERSTA",
+   "typeName": "Floor/reading lamp",
+   "validDesignText": "aluminium chrome effect",
+   "itemMeasureReferenceText": "",
+   "pipUrl": "https://www.ikea.com/nl/en/p/lersta-floor-reading-lamp-aluminium-chrome-effect-00110640/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/lersta-floor-reading-lamp-aluminium-chrome-effect__0606034_pe681992_s5.jpg",
+   "colors": [
+    {
+     "name": "grey",
+     "id": "10028",
+     "hex": "949494"
+    }
+   ],
+   "ratingValue": 4.6,
+   "ratingCount": 45,
+   "salesPrice": {
+    "numeral": 19.99
+   },
+   "gprDescription": {
+    "variants": []
+   }
+  }
+ },
+ {
+  "no": "29640333",
+  "x": 1400,
+  "y": 5000,
+  "rot": 90,
+  "product": {
+   "itemNo": "29640333",
+   "name": "VIHALS",
+   "typeName": "Table and 4 chairs",
+   "validDesignText": "white white/black",
+   "itemMeasureReferenceText": "125x74 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/vihals-table-and-4-chairs-white-white-black-s29640333/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/vihals-table-and-4-chairs-white-white-black__1561906_pe1025761_s5.jpg",
+   "colors": [
+    {
+     "name": "black",
+     "id": "10139",
+     "hex": "000000"
+    },
+    {
+     "name": "white",
+     "id": "10156",
+     "hex": "ffffff"
+    }
+   ],
+   "ratingValue": null,
+   "ratingCount": null,
+   "salesPrice": {
+    "numeral": 111.95
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "99589939",
+      "validDesignText": "green green/white Tibbleby beige-grey",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/vihals-vihals-table-and-4-chairs-green-green-white-tibbleby-beige-grey__1388797_pe964964_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/vihals-vihals-table-and-4-chairs-green-green-white-tibbleby-beige-grey-s99589939/",
+      "itemMeasureReferenceText": "125x74 cm",
+      "typeName": "Table and 4 chairs",
+      "name": "VIHALS / VIHALS",
+      "salesPrice": {
+       "numeral": 199.95
+      }
+     },
+     {
+      "itemNo": "79590415",
+      "validDesignText": "green green/white pine",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/vihals-buslatt-table-and-4-chairs-green-green-white-pine__1401621_pe969060_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/vihals-buslatt-table-and-4-chairs-green-green-white-pine-s79590415/",
+      "itemMeasureReferenceText": "125x74 cm",
+      "typeName": "Table and 4 chairs",
+      "name": "VIHALS / BUSLÄTT",
+      "salesPrice": {
+       "numeral": 159.95
+      }
+     },
+     {
+      "itemNo": "79589940",
+      "validDesignText": "green green/green Tibbleby grey-green",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/vihals-vihals-table-and-4-chairs-green-green-green-tibbleby-grey-green__1388792_pe964969_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/vihals-vihals-table-and-4-chairs-green-green-green-tibbleby-grey-green-s79589940/",
+      "itemMeasureReferenceText": "125x74 cm",
+      "typeName": "Table and 4 chairs",
+      "name": "VIHALS / VIHALS",
+      "salesPrice": {
+       "numeral": 199.95
+      }
+     },
+     {
+      "itemNo": "69590473",
+      "validDesignText": "white white/white pine",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/vihals-buslatt-table-and-4-chairs-white-white-white-pine__1401620_pe969059_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/vihals-buslatt-table-and-4-chairs-white-white-white-pine-s69590473/",
+      "itemMeasureReferenceText": "125x74 cm",
+      "typeName": "Table and 4 chairs",
+      "name": "VIHALS / BUSLÄTT",
+      "salesPrice": {
+       "numeral": 159.95
+      }
+     },
+     {
+      "itemNo": "59617835",
+      "validDesignText": "green green/yellow Tibbleby yellow",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/vihals-vihals-table-and-4-chairs-green-green-yellow-tibbleby-yellow__1427245_pe980208_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/vihals-vihals-table-and-4-chairs-green-green-yellow-tibbleby-yellow-s59617835/",
+      "itemMeasureReferenceText": "125x74 cm",
+      "typeName": "Table and 4 chairs",
+      "name": "VIHALS / VIHALS",
+      "salesPrice": {
+       "numeral": 199.95
+      }
+     },
+     {
+      "itemNo": "59606785",
+      "validDesignText": "green green/yellow Tibbleby yellow",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/vihals-vihals-table-and-4-chairs-green-green-yellow-tibbleby-yellow__1427245_pe980208_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/vihals-vihals-table-and-4-chairs-green-green-yellow-tibbleby-yellow-s59606785/",
+      "itemMeasureReferenceText": "125x74 cm",
+      "typeName": "Table and 4 chairs",
+      "name": "VIHALS / VIHALS",
+      "salesPrice": {
+       "numeral": 199.95
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "00508536",
+  "x": 1400,
+  "y": 5000,
+  "rot": 0,
+  "product": {
+   "itemNo": "00508536",
+   "name": "SINNERLIG",
+   "typeName": "Pendant lamp",
+   "validDesignText": "bamboo/handmade",
+   "itemMeasureReferenceText": "27 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/sinnerlig-pendant-lamp-bamboo-handmade-00508536/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/sinnerlig-pendant-lamp-bamboo-handmade__1101927_pe866502_s5.jpg",
+   "colors": [
+    {
+     "name": "beige",
+     "id": "10003",
+     "hex": "f4f3d7"
+    }
+   ],
+   "ratingValue": 4.6,
+   "ratingCount": 123,
+   "salesPrice": {
+    "numeral": 24.99
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "70311697",
+      "validDesignText": "bamboo/handmade",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/sinnerlig-pendant-lamp-bamboo-handmade__0919001_pe786542_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/sinnerlig-pendant-lamp-bamboo-handmade-70311697/",
+      "itemMeasureReferenceText": "50 cm",
+      "typeName": "Pendant lamp",
+      "name": "SINNERLIG",
+      "salesPrice": {
+       "numeral": 59.99
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "80437234",
+  "x": 3995,
+  "y": 1660,
+  "rot": -90,
+  "product": {
+   "itemNo": "80437234",
+   "name": "KLEPPSTAD",
+   "typeName": "Wardrobe with 2 doors",
+   "validDesignText": "white",
+   "itemMeasureReferenceText": "79x55x176 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/kleppstad-wardrobe-with-2-doors-white-80437234/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/kleppstad-wardrobe-with-2-doors-white__0733324_pe748781_s5.jpg",
+   "colors": [
+    {
+     "name": "white",
+     "id": "10156",
+     "hex": "ffffff"
+    }
+   ],
+   "ratingValue": 4.5,
+   "ratingCount": 65,
+   "salesPrice": {
+    "numeral": 79.99
+   },
+   "gprDescription": {
+    "variants": []
+   }
+  }
+ },
+ {
+  "no": "60583924",
+  "placed": false,
+  "qty": 3,
+  "product": {
+   "itemNo": "60583924",
+   "name": "SOLHETTA",
+   "typeName": "LED bulb E27 806 lumen",
+   "validDesignText": "dimmable/globe opal white",
+   "itemMeasureReferenceText": "",
+   "pipUrl": "https://www.ikea.com/nl/en/p/solhetta-led-bulb-e27-806-lumen-dimmable-globe-opal-white-60583924/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/solhetta-led-bulb-e27-806-lumen-dimmable-globe-opal-white__0988841_pe818257_s5.jpg",
+   "colors": [
+    {
+     "name": "white",
+     "id": "10156",
+     "hex": "ffffff"
+    }
+   ],
+   "ratingValue": 4.7,
+   "ratingCount": 9,
+   "salesPrice": {
+    "numeral": 4.99
+   },
+   "gprDescription": {
+    "variants": []
+   }
+  }
+ },
+ {
+  "no": "00397307",
+  "x": 8900,
+  "y": -380,
+  "rot": -90,
+  "elev": 100,
+  "w": 1060,
+  "product": {
+   "itemNo": "00397307",
+   "name": "TRONES",
+   "typeName": "Shoe cabinet/storage",
+   "validDesignText": "white",
+   "itemMeasureReferenceText": "52x18x39 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/trones-shoe-cabinet-storage-white-00397307/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/trones-shoe-cabinet-storage-white__0710711_pe727734_s5.jpg",
+   "colors": [
+    {
+     "name": "white",
+     "id": "10156",
+     "hex": "ffffff"
+    }
+   ],
+   "ratingValue": 4.7,
+   "ratingCount": 90,
+   "salesPrice": {
+    "numeral": 24.99
+   },
+   "gprDescription": {
+    "variants": []
+   }
+  }
+ },
+ {
+  "no": "40551047",
+  "x": 8975,
+  "y": 600,
+  "rot": -90,
+  "elev": 900,
+  "product": {
+   "itemNo": "40551047",
+   "name": "LILJETRÄD",
+   "typeName": "Mirror",
+   "validDesignText": "black",
+   "itemMeasureReferenceText": "30x115 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/liljetrad-mirror-black-40551047/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/liljetrad-mirror-black__1158735_pe888171_s5.jpg",
+   "colors": [
+    {
+     "name": "black",
+     "id": "10139",
+     "hex": "000000"
+    }
+   ],
+   "ratingValue": 4.8,
+   "ratingCount": 12,
+   "salesPrice": {
+    "numeral": 14.99
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "20592100",
+      "validDesignText": "white",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/liljetrad-mirror-white__1357339_pe953526_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/liljetrad-mirror-white-20592100/",
+      "itemMeasureReferenceText": "30x115 cm",
+      "typeName": "Mirror",
+      "name": "LILJETRÄD",
+      "salesPrice": {
+       "numeral": 14.99
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "no": "00525908",
+  "x": 8445,
+  "y": -1000,
+  "rot": 0,
+  "product": {
+   "itemNo": "00525908",
+   "name": "BARLAST",
+   "typeName": "LED ceiling/wall lamp",
+   "validDesignText": "white",
+   "itemMeasureReferenceText": "25 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/barlast-led-ceiling-wall-lamp-white-00525908/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/barlast-led-ceiling-wall-lamp-white__0772861_pe756185_s5.jpg",
+   "colors": [
+    {
+     "name": "white",
+     "id": "10156",
+     "hex": "ffffff"
+    }
+   ],
+   "ratingValue": 4.3,
+   "ratingCount": 91,
+   "salesPrice": {
+    "numeral": 4.99
+   },
+   "gprDescription": {
+    "variants": []
+   }
+  }
+ },
+ {
+  "no": "00525908",
+  "x": 5200,
+  "y": 550,
+  "rot": 0,
+  "product": {
+   "itemNo": "00525908",
+   "name": "BARLAST",
+   "typeName": "LED ceiling/wall lamp",
+   "validDesignText": "white",
+   "itemMeasureReferenceText": "25 cm",
+   "pipUrl": "https://www.ikea.com/nl/en/p/barlast-led-ceiling-wall-lamp-white-00525908/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/barlast-led-ceiling-wall-lamp-white__0772861_pe756185_s5.jpg",
+   "colors": [
+    {
+     "name": "white",
+     "id": "10156",
+     "hex": "ffffff"
+    }
+   ],
+   "ratingValue": 4.3,
+   "ratingCount": 91,
+   "salesPrice": {
+    "numeral": 4.99
+   },
+   "gprDescription": {
+    "variants": []
+   }
+  }
+ },
+ {
+  "no": "69898415",
+  "x": -1330,
+  "y": 4600,
+  "rot": 0,
+  "w": 550,
+  "d": 540,
+  "h": 700,
+  "product": {
+   "itemNo": "69898415",
+   "name": "TÄRNÖ",
+   "typeName": "Table+2 chairs, outdoor",
+   "validDesignText": "black/light brown stained",
+   "itemMeasureReferenceText": "",
+   "pipUrl": "https://www.ikea.com/nl/en/p/tarno-table-2-chairs-outdoor-black-light-brown-stained-s69898415/",
+   "mainImageUrl": "https://www.ikea.com/nl/en/images/products/tarno-table-2-chairs-outdoor-black-light-brown-stained__0736028_pe740355_s5.jpg",
+   "colors": [
+    {
+     "name": "brown",
+     "id": "10019",
+     "hex": "814820"
+    },
+    {
+     "name": "black",
+     "id": "10139",
+     "hex": "000000"
+    }
+   ],
+   "ratingValue": 4.7,
+   "ratingCount": 52,
+   "salesPrice": {
+    "numeral": 56.97
+   },
+   "gprDescription": {
+    "variants": [
+     {
+      "itemNo": "29575342",
+      "validDesignText": "black/light brown stained foldable/foldable Kuddarna light grey-beige",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/tarno-table-2-chairs-outdoor-black-light-brown-stained-foldable-foldable-kuddarna-light-grey-beige__1469779_pe996664_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/tarno-table-2-chairs-outdoor-black-light-brown-stained-foldable-foldable-kuddarna-light-grey-beige-s29575342/",
+      "itemMeasureReferenceText": "55x54 cm",
+      "typeName": "Table+2 chairs, outdoor",
+      "name": "TÄRNÖ",
+      "salesPrice": {
+       "numeral": 66.95
+      }
+     },
+     {
+      "itemNo": "69576189",
+      "validDesignText": "foldable black/light brown stained/foldable Klösan dark blue",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/tarno-table-2-chairs-outdoor-foldable-black-light-brown-stained-foldable-klosan-dark-blue__1381184_pe961781_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/tarno-table-2-chairs-outdoor-foldable-black-light-brown-stained-foldable-klosan-dark-blue-s69576189/",
+      "itemMeasureReferenceText": "55x54 cm",
+      "typeName": "Table+2 chairs, outdoor",
+      "name": "TÄRNÖ",
+      "salesPrice": {
+       "numeral": 68.95
+      }
+     },
+     {
+      "itemNo": "59270863",
+      "validDesignText": "black/light brown stained/Frösön/Duvholmen beige",
+      "mainImageUrl": "https://www.ikea.com/nl/en/images/products/tarno-table-2-chairs-outdoor-black-light-brown-stained-froson-duvholmen-beige__0736027_pe740354_s5.jpg",
+      "pipUrl": "https://www.ikea.com/nl/en/p/tarno-table-2-chairs-outdoor-black-light-brown-stained-froson-duvholmen-beige-s59270863/",
+      "itemMeasureReferenceText": "",
+      "typeName": "Table+2 chairs, outdoor",
+      "name": "TÄRNÖ",
+      "salesPrice": {
+       "numeral": 82.93
+      }
+     }
+    ]
+   }
+  }
+ }
+]
