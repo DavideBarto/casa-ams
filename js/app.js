@@ -79,7 +79,8 @@ function travel(from, to) {
 
 // ---------- scene ----------
 const stage = $('#stage');
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+// Ask for the fast GPU: on laptops with two chips Chrome otherwise often draws on the weak integrated one.
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
