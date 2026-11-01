@@ -1,6 +1,6 @@
 // node tests/ikea.test.mjs
 import assert from 'node:assert/strict';
-import { classify, sizeOf } from '../js/ikea.js';
+import { classify, sizeOf, colorFor, shapeParams, translate } from '../js/ikea.js';
 
 const cases = {
   'Table lamp': 'tablelamp', 'Desk lamp': 'tablelamp', 'Bedside lamp': 'tablelamp', 'Floor/reading lamp': 'floorlamp', 'Pendant lamp': 'pendant',
@@ -21,5 +21,27 @@ assert.deepEqual(sizeOf({ itemNo: '2', itemMeasureReferenceText: '117x50x190 cm'
 const chair = sizeOf({ itemNo: '3', itemMeasureReferenceText: 'Medium' }, 'officechair', {});
 assert.equal(chair.known, false);
 assert.equal(chair.exact, false);
+
+// colours: the first one named wins, but a two-tone frame/wood piece reads as its wood
+const col = d => colorFor({ validDesignText: d }, 'table');
+assert.equal(col('white/white/black'), '#f4f4f1');
+assert.equal(col('black/light brown stained'), '#b08a5c');
+assert.equal(col('white stained oak effect'), '#d9c4a0');
+assert.equal(col('Kelinge grey-turquoise'), '#6f8a85');
+
+// chaise and corner sofas take their L proportions from the product page
+const chaise = { itemNo: 'c', typeName: '3-seat sofa with chaise longue' };
+const cdims = { c: { Width: 197, Depth: 80.5, 'Depth chaise longue': 145, 'Armrest width': 24 } };
+const cs = sizeOf(chaise, 'sofa', cdims);
+assert.deepEqual([cs.w, cs.d], [1970, 1450]);
+assert.deepEqual(shapeParams(chaise, 'sofa', cdims, cs), { kind: 'chaise', md: 805, arm: 240 });
+const corner = { itemNo: 'k', typeName: 'Corner sofa, 5-seat' }, kdims = { k: { Depth: 95, 'Width right': 297, 'Width left': 257 } };
+assert.equal(shapeParams(corner, 'sofa', kdims, sizeOf(corner, 'sofa', kdims)).kind, 'corner');
+
+assert.equal(translate('divano con penisola'), 'sofa with chaise longue');
+assert.equal(translate('bastone per tende'), 'curtain rod');
+// a lone chaise module is a deep straight seat; free height 0 means no legs
+const lone = { itemNo: 'l', typeName: 'Chaise longue' }, ldims = { l: { Width: 90, 'Depth chaise longue': 163, 'Free height under furniture': 0 } };
+assert.deepEqual(shapeParams(lone, 'sofa', ldims, sizeOf(lone, 'sofa', ldims)), { leg: 0, kind: 'straight' });
 
 console.log('ikea tests passed');

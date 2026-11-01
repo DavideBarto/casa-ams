@@ -51,13 +51,15 @@
   .app { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 420px; }
   .stage { position: relative; min-width: 0; overflow: hidden; background: var(--scene); touch-action: none; }
   .stage canvas { display: block; width: 100%; height: 100%; }
-  .labels { position: absolute; inset: 0; pointer-events: none; }
+  .labels { position: absolute; inset: 0; pointer-events: none; z-index: 0; isolation: isolate; }   /* labels set their own z-index for depth sorting */
+  .toolbar, .card, .hint, .pad { z-index: 1; }
 
   .toolbar { position: absolute; top: max(12px, env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); right: 16px; display: flex; flex-wrap: wrap; gap: 8px; pointer-events: none; }
   .toolbar > * { pointer-events: auto; }
   .seg { display: inline-flex; background: var(--overlay); border: 1px solid var(--line); border-radius: 10px; padding: 3px; box-shadow: var(--shadow); }
   .seg button, .tog { border: 0; background: transparent; padding: 7px 11px; border-radius: 7px; font-weight: 600; font-size: 13px; white-space: nowrap; }
   .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  .seg-lbl { align-self: center; padding: 0 6px 0 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
   .tog { background: var(--overlay); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 10px; padding: 8px 11px; }
   .tog[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
   .hint { position: absolute; bottom: 14px; left: max(16px, env(safe-area-inset-left, 0px)); right: 16px; width: fit-content; max-width: calc(100% - 32px); font-size: 12px; color: var(--muted); background: var(--overlay); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); }
@@ -202,7 +204,12 @@
         <button id="v-top" aria-pressed="false">Plan</button>
         <button id="v-walk" aria-pressed="false">Walk</button>
       </div>
-      <button class="tog" id="t-cut" aria-pressed="true">Cutaway</button>
+      <div class="seg" role="group" aria-label="Walls">
+        <span class="seg-lbl">Walls</span>
+        <button id="w-full" aria-pressed="false">Full</button>
+        <button id="w-low" aria-pressed="true">Low</button>
+        <button id="w-off" aria-pressed="false">Off</button>
+      </div>
       <button class="tog" id="t-zones" aria-pressed="false">Clearances</button>
       <button class="tog" id="t-labels" aria-pressed="true">Labels</button>
       <div class="seg" role="group" aria-label="History">
@@ -250,7 +257,7 @@
     <div class="panel-in" id="pane-add" role="tabpanel" aria-labelledby="tab-add" hidden>
       <div class="swapbar" id="swapbar" hidden><span></span><button type="button">Cancel</button></div>
       <form class="search" id="search" role="search">
-        <input id="q" type="search" placeholder="Search IKEA.nl, e.g. KIVIK or desk 140" aria-label="Search IKEA.nl" autocomplete="off">
+        <input id="q" type="search" placeholder="Search IKEA.nl: KIVIK, desk 140, divano con penisola" aria-label="Search IKEA.nl" autocomplete="off">
         <button class="primary" type="submit">Search</button>
         <select id="sort" aria-label="Sort results">
           <option value="">Most relevant</option>

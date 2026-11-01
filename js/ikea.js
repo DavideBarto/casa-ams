@@ -10,6 +10,25 @@ export async function search(q, { size = 24, sort } = {}) {
   return { products: (main?.items || []).map(i => i.product).filter(p => p?.itemNo), total: main?.max ?? 0 };
 }
 
+// The catalogue is searched in English; common Italian words are translated first ("divano con penisola").
+const IT = [
+  ['divano letto', 'sofa-bed'], ['divano angolare', 'corner sofa'], ['penisola', 'chaise longue'], ['chaise longue', 'chaise longue'], ['divano', 'sofa'],
+  ['poltrona', 'armchair'], ['letto matrimoniale', 'double bed'], ['letto', 'bed'], ['materasso', 'mattress'], ['armadio', 'wardrobe'],
+  ['cassettiera', 'chest of drawers'], ['comodino', 'bedside table'], ['scrivania', 'desk'], ['sedia da ufficio', 'office chair'], ['sedia ufficio', 'office chair'],
+  ['sedie', 'chairs'], ['sedia', 'chair'], ['sgabello', 'stool'], ['panca', 'bench'], ['tavolo da pranzo', 'dining table'], ['tavolino', 'coffee table'],
+  ['tavolo', 'table'], ['mobile tv', 'tv bench'], ['porta tv', 'tv bench'], ['libreria', 'bookcase'], ['scaffale', 'shelving unit'], ['credenza', 'sideboard'],
+  ['madia', 'sideboard'], ['scarpiera', 'shoe cabinet'], ['appendiabiti', 'coat rack'], ['lampada da terra', 'floor lamp'], ['piantana', 'floor lamp'],
+  ['lampada da tavolo', 'table lamp'], ['lampadario', 'pendant lamp'], ['plafoniera', 'ceiling lamp'], ['lampada', 'lamp'], ['tappeto', 'rug'],
+  ['bastone per tende', 'curtain rod'], ['tende', 'curtains'], ['tenda', 'curtain'], ['specchio', 'mirror'], ['vaso', 'plant pot'], ['pianta', 'plant'],
+  ['balcone', 'outdoor'], ['esterno', 'outdoor'], ['grigio scuro', 'dark grey'], ['grigio', 'grey'], ['bianco', 'white'], ['nero', 'black'], ['rovere', 'oak'],
+  ['legno', 'wood'], ['con', 'with'],
+];
+export function translate(q) {
+  let out = ` ${q.toLowerCase()} `;
+  for (const [it, en] of IT) out = out.replace(new RegExp(`(?<=\\s)${it}(?=\\s)`, 'g'), en);
+  return out.trim();
+}
+
 export async function byItemNo(no) {
   const { products } = await search(no, { size: 3 });
   return products.find(p => p.itemNo === no) || null;
@@ -66,7 +85,9 @@ function fromMeasures(m, shape) {
   const g = k => (m[k] ? m[k] * 10 : undefined);
   const first = (...ks) => ks.map(g).find(Boolean);
   let w, d, h;
-  if (shape === 'bed' || shape === 'mattress') { w = g('Width'); d = g('Length'); h = shape === 'bed' ? first('Headboard height', 'Height') : first('Thickness', 'Height'); }
+  if (shape === 'sofa' || shape === 'armchair') {   // chaise and corner sofas list their L sizes separately
+    w = first('Width', 'Max. width', 'Width right'); d = first('Depth chaise longue', 'Max. depth', 'Width left', 'Depth'); h = g('Height');
+  } else if (shape === 'bed' || shape === 'mattress') { w = g('Width'); d = g('Length'); h = shape === 'bed' ? first('Headboard height', 'Height') : first('Thickness', 'Height'); }
   else if (shape === 'diningset') { w = first('Table length', 'Length', 'Diameter'); d = first('Table width', 'Width', 'Diameter'); h = first('Table height', 'Height'); }
   else if (shape === 'rug') { w = first('Width', 'Diameter'); d = first('Length', 'Diameter'); h = first('Thickness'); }
   else if (shape === 'curtain') { w = g('Width'); h = g('Length'); }
@@ -97,6 +118,26 @@ function fromText(text = '', shape) {
   return { w: a, d: b };
 }
 
+/** Proportions the 3D model and the fit check use: sofa layout and arms, bed style, legs. All mm. */
+export function shapeParams(product, shape, dims, size) {
+  const m = dims?.[product.itemNo] || {}, g = k => (m[k] != null ? m[k] * 10 : undefined);   // 0 is real: "sits on the floor"
+  const t = `${product.typeName || ''} ${product.name || ''}`.toLowerCase(), sp = {};
+  if (g('Free height under furniture') !== undefined) sp.leg = g('Free height under furniture');
+  if (shape === 'sofa' || shape === 'armchair') {
+    // L and U layouts need room for a seat run beside the chaise; a lone chaise module (~90 cm) is just a deep seat
+    const wide = size.w >= 1500;
+    sp.kind = shape === 'armchair' || !wide ? 'straight' : /u-shaped/.test(t) ? 'u' : /chaise|corner sofa-bed/.test(t) ? 'chaise' : /corner/.test(t) ? 'corner' : size.d > 1250 ? 'chaise' : 'straight';
+    const main = g('Min. depth') || (g('Depth') < size.d ? g('Depth') : undefined);
+    if (sp.kind !== 'straight') sp.md = main || Math.min(1000, Math.max(800, size.d * 0.6));
+    for (const [k, label] of [['arm', 'Armrest width'], ['armH', 'Armrest height'], ['seatH', 'Seat height']]) if (g(label)) sp[k] = g(label);
+  } else if (shape === 'bed') {
+    if (g('Footboard height')) sp.foot = g('Footboard height');
+    sp.soft = /upholstered/.test(t);
+    sp.storage = /storage|drawer/.test(t);
+  }
+  return sp;
+}
+
 export function sizeOf(product, shape, dims) {
   const [dw, dd, dh] = defaultSize(shape);
   const measured = dims?.[product.itemNo] && fromMeasures(dims[product.itemNo], shape);
@@ -107,17 +148,21 @@ export function sizeOf(product, shape, dims) {
 }
 
 const WORDS = [
-  [/dark grey|anthracite|dark gray/, '#50545b'], [/light grey|light gray/, '#c9ccd0'], [/grey|gray/, '#8d9198'],
+  [/dark grey|anthracite|dark gray/, '#50545b'], [/light grey|light gray/, '#c9ccd0'], [/grey-turquoise|grey-green/, '#6f8a85'], [/grey|gray/, '#8d9198'],
   [/black-brown|black brown/, '#3b302a'], [/white stained oak|white-stained oak/, '#d9c4a0'], [/black/, '#26282c'],
   [/oak|ash/, '#c8a676'], [/birch/, '#d8bf94'], [/pine/, '#d2a86a'], [/walnut/, '#7a5538'], [/bamboo|rattan|acacia|teak|eucalyptus/, '#b88a55'],
-  [/beige|natural|cream|off-white/, '#e2d6bf'], [/brown/, '#7b5a43'], [/green/, '#6f8d6a'], [/blue|turquoise/, '#4f6f9a'],
+  [/beige|natural|cream|off-white/, '#e2d6bf'], [/light brown|brown stained/, '#b08a5c'], [/brown/, '#7b5a43'], [/green/, '#6f8d6a'], [/blue|turquoise/, '#4f6f9a'],
   [/red|terracotta/, '#a5463a'], [/yellow/, '#d9b44a'], [/pink/, '#d9a3a5'], [/white/, '#f4f4f1'],
 ];
+const WOOD_TONES = new Set(['#c8a676', '#d8bf94', '#d2a86a', '#7a5538', '#b88a55', '#b08a5c']);
 export function colorFor(p, shape) {
   if (shape === 'mattress') return '#e6edf3';
   const t = (p.validDesignText || '').toLowerCase();
   let best = null;   // the colour named first wins: "white/white/black" is white
   for (const [re, hex] of WORDS) { const i = t.search(re); if (i >= 0 && (!best || i < best[0])) best = [i, hex]; }
+  // two-tone "black/light brown stained": the frame is black, the piece reads as its wood
+  const woody = /\//.test(t) && WORDS.find(([re, hex]) => WOOD_TONES.has(hex) && re.test(t));
+  if (woody && ['#26282c', '#f4f4f1'].includes(best?.[1])) return woody[1];
   if (best) return best[1];
   const hex = p.colors?.[0]?.hex;
   return hex && hex !== '949494' ? '#' + hex : '#c9c9c4';
@@ -130,10 +175,10 @@ const variantOf = v => ({ itemNo: v.itemNo, design: v.validDesignText || '', img
 
 /** A search-API product -> planner item (position 0,0; the caller places it). */
 export function toItem(p, dims) {
-  const shape = classify(p.typeName);
+  const shape = classify(p.typeName), size = sizeOf(p, shape, dims);
   return {
     uid: uid(), itemNo: p.itemNo, name: p.name, type: p.typeName, design: p.validDesignText || '', price: p.salesPrice?.numeral ?? 0,
-    url: p.pipUrl, img: p.mainImageUrl, measure: p.itemMeasureReferenceText || '', shape, ...sizeOf(p, shape, dims),
+    url: p.pipUrl, img: p.mainImageUrl, measure: p.itemMeasureReferenceText || '', shape, ...size, sp: shapeParams(p, shape, dims, size), flip: 1,
     color: colorFor(p, shape), x: 0, y: 0, rot: 0, elev: /standing/i.test(p.typeName) ? 0 : (ELEV[shape] || 0),
     placed: shape !== 'accessory', qty: 1, rating: p.ratingValue ?? null, ratingCount: p.ratingCount ?? 0,
     variants: (p.gprDescription?.variants || []).slice(0, 12).map(variantOf),
