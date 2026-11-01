@@ -41,14 +41,15 @@ function canvasTex(draw) {
 }
 
 export function buildApartment(scene) {
-  const group = new THREE.Group(); scene.add(group);
+  const group = new THREE.Group(); group.name = 'Apartment'; scene.add(group);
   const cutables = [];   // { mesh, z1, z2, wall }: shrink to 1 m when walls are low; walls lie flat when they're off
   const walls = [];      // plan rects that furniture and walkers can't pass
 
   const wallMat = M('#f3f2ef'), poche = M('#2a2d33');       // section-cut colour, like the black walls on the drawing
   const wallMats = [wallMat, wallMat, poche, wallMat, wallMat, wallMat];
-  const glassMat = new THREE.MeshStandardMaterial({ color: 0xa9c7d8, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0.1, depthWrite: false });
+  const glassMat = new THREE.MeshStandardMaterial({ name: 'glass', color: 0xa9c7d8, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0.1, depthWrite: false });
   const frameMat = M('#3b3f45'), fixture = M('#ffffff', { roughness: 0.35 }), grey = M('#b9bdc2'), steel = M('#c9cdd1', { metalness: 0.6, roughness: 0.3 });
+  for (const [mt, name] of [[wallMat, 'wall'], [poche, 'wall-top'], [frameMat, 'frame'], [fixture, 'ceramic'], [grey, 'appliance'], [steel, 'steel']]) mt.name = name;
 
   function slab(x1, y1, x2, y2, z1, z2, mat, { cut = true, solid = false, shadow = true, isWall = false } = {}) {
     const h = m(z2 - z1), geo = new THREE.BoxGeometry(m(x2 - x1), h, m(y2 - y1));
@@ -66,9 +67,9 @@ export function buildApartment(scene) {
   const glass = (x1, y1, x2, y2, z1, z2, solid = false) => slab(x1, y1, x2, y2, z1, z2, glassMat, { solid, shadow: false, isWall: true });
   const post = (x1, y1, x2, y2, z1 = 0, z2 = H) => slab(x1, y1, x2, y2, z1, z2, frameMat, { isWall: true });
 
-  function floor(x1, y1, x2, y2, tex, rep, z = 0) {
+  function floor(x1, y1, x2, y2, tex, rep, z, name) {
     const t = tex.clone(); t.needsUpdate = true; t.repeat.set(m(x2 - x1) / rep, m(y2 - y1) / rep);
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(m(x2 - x1), m(y2 - y1)), new THREE.MeshStandardMaterial({ map: t, roughness: 0.85 }));
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(m(x2 - x1), m(y2 - y1)), new THREE.MeshStandardMaterial({ name, map: t, roughness: 0.85 }));
     mesh.rotation.x = -Math.PI / 2; mesh.position.set(m((x1 + x2) / 2), m(z), m((y1 + y2) / 2)); mesh.receiveShadow = true;
     mesh.userData.floor = true;
     group.add(mesh);
@@ -90,10 +91,10 @@ export function buildApartment(scene) {
     x.fillStyle = '#e3e6e8'; x.fillRect(0, 0, s, s); x.strokeStyle = '#c4c9cd'; x.lineWidth = 3;
     for (let i = 0; i <= 4; i++) { x.beginPath(); x.moveTo(i * 128, 0); x.lineTo(i * 128, s); x.moveTo(0, i * 128); x.lineTo(s, i * 128); x.stroke(); }
   });
-  floor(-100, -2165, 9290, 6350, wood, 1.44);
-  floor(7470, 2350, 8990, 6150, tile, 1.2, 2);
-  floor(6320, -1210, 7290, -100, tile, 1.2, 2);
-  floor(-2570, -160, -100, 6400, deck, 1.12, -40);
+  floor(-100, -2165, 9290, 6350, wood, 1.44, 0, 'floor-wood');
+  floor(7470, 2350, 8990, 6150, tile, 1.2, 2, 'floor-tile');
+  floor(6320, -1210, 7290, -100, tile, 1.2, 2, 'floor-tile');
+  floor(-2570, -160, -100, 6400, deck, 1.12, -40, 'deck');
 
   // exterior and party walls
   wall(-100, -300, 6220, 0); wall(6220, -2165, 6320, -300); wall(6220, -2165, 7950, -2065);
@@ -130,7 +131,7 @@ export function buildApartment(scene) {
   slab(7330, 3530, 7366, 4470, 0, 2150, M('#e9e4da')); slab(7340, 3500, 7368, 5400, 2160, 2200, frameMat);   // bathroom sliding door
 
   // kitchen (comes with the flat)
-  const front = M('#e2e0da');
+  const front = M('#e2e0da'); front.name = 'kitchen-front';
   slab(3670, 2200, 4270, 2800, 0, 2200, front, { solid: true });
   slab(3670, 2800, 4270, 5750, 0, 870, front, { solid: true });
   slab(3650, 2800, 4270, 5750, 870, 910, M('#45484e'), { cut: false });

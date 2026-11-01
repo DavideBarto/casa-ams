@@ -45,7 +45,8 @@ const cache = new Map();
 /** Plain painted material; also used by apartment.js. */
 export function M(color, o = {}) {
   const key = 'M' + color + JSON.stringify(o);
-  if (!cache.has(key)) cache.set(key, new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0, ...o }));
+  // names travel into the .glb export, so Blender/Unreal can tell materials apart ('light' = glowing lamp parts)
+  if (!cache.has(key)) cache.set(key, new THREE.MeshStandardMaterial({ name: o.emissive ? 'light' : 'paint', color, roughness: 0.6, metalness: 0, ...o }));
   return cache.get(key);
 }
 function mat(kind, color) {
@@ -60,7 +61,7 @@ function mat(kind, color) {
       gloss: { roughness: 0.12 },
       mirror: { metalness: 1, roughness: 0.04 },
     }[kind];
-    cache.set(key, new THREE.MeshStandardMaterial({ color, ...o }));
+    cache.set(key, new THREE.MeshStandardMaterial({ name: kind, color, ...o }));
   }
   return cache.get(key);
 }

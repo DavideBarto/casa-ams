@@ -14,6 +14,15 @@ A 3D furnishing planner for our Amsterdam apartment (54 m² + 16 m² balcony), b
 - Navigation by [camera-controls](https://github.com/yomotsu/camera-controls): zoom to the pointer, smooth moves, double-click to focus, jump to a room. The scene is drawn only when something changes, at 1× resolution while moving.
 - Several layouts per browser; share a layout as a link or a file. Shopping list with a budget, per room.
 
+## Blender and Unreal
+
+The Layouts tab has **Download 3D model (.glb)**: the whole flat with named pieces and materials, in metres.
+
+- Blender: `blender -b -P tools/blender/casa_render.py -- --glb casa-ams.glb --out renders` renders every room at
+  morning, afternoon, sunset and night with Cycles, and saves `renders/casa-ams.blend` to explore (it has a README text block).
+  Add `--no-render` to only build the scene. The floor texture comes from [Poly Haven](https://polyhaven.com) (CC0).
+- Unreal Engine 5: drag the .glb into the Content Browser (Interchange glTF import).
+
 ## Run locally
 
 Static files, no build step:
