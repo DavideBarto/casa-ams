@@ -19,7 +19,7 @@ const IT = [
   ['tavolo', 'table'], ['mobile tv', 'tv bench'], ['porta tv', 'tv bench'], ['libreria', 'bookcase'], ['scaffale', 'shelving unit'], ['credenza', 'sideboard'],
   ['madia', 'sideboard'], ['scarpiera', 'shoe cabinet'], ['appendiabiti', 'coat rack'], ['lampada da terra', 'floor lamp'], ['piantana', 'floor lamp'],
   ['lampada da tavolo', 'table lamp'], ['lampadario', 'pendant lamp'], ['plafoniera', 'ceiling lamp'], ['lampada', 'lamp'], ['tappeto', 'rug'],
-  ['tende', 'curtains'], ['tenda', 'curtain'], ['bastone per tende', 'curtain rod'], ['specchio', 'mirror'], ['vaso', 'plant pot'], ['pianta', 'plant'],
+  ['bastone per tende', 'curtain rod'], ['tende', 'curtains'], ['tenda', 'curtain'], ['specchio', 'mirror'], ['vaso', 'plant pot'], ['pianta', 'plant'],
   ['balcone', 'outdoor'], ['esterno', 'outdoor'], ['grigio scuro', 'dark grey'], ['grigio', 'grey'], ['bianco', 'white'], ['nero', 'black'], ['rovere', 'oak'],
   ['legno', 'wood'], ['con', 'with'],
 ];
@@ -120,11 +120,13 @@ function fromText(text = '', shape) {
 
 /** Proportions the 3D model and the fit check use: sofa layout and arms, bed style, legs. All mm. */
 export function shapeParams(product, shape, dims, size) {
-  const m = dims?.[product.itemNo] || {}, g = k => (m[k] ? m[k] * 10 : undefined);
+  const m = dims?.[product.itemNo] || {}, g = k => (m[k] != null ? m[k] * 10 : undefined);   // 0 is real: "sits on the floor"
   const t = `${product.typeName || ''} ${product.name || ''}`.toLowerCase(), sp = {};
   if (g('Free height under furniture') !== undefined) sp.leg = g('Free height under furniture');
   if (shape === 'sofa' || shape === 'armchair') {
-    sp.kind = shape === 'armchair' ? 'straight' : /u-shaped/.test(t) ? 'u' : /chaise|corner sofa-bed/.test(t) ? 'chaise' : /corner/.test(t) ? 'corner' : size.d > 1250 ? 'chaise' : 'straight';
+    // L and U layouts need room for a seat run beside the chaise; a lone chaise module (~90 cm) is just a deep seat
+    const wide = size.w >= 1500;
+    sp.kind = shape === 'armchair' || !wide ? 'straight' : /u-shaped/.test(t) ? 'u' : /chaise|corner sofa-bed/.test(t) ? 'chaise' : /corner/.test(t) ? 'corner' : size.d > 1250 ? 'chaise' : 'straight';
     const main = g('Min. depth') || (g('Depth') < size.d ? g('Depth') : undefined);
     if (sp.kind !== 'straight') sp.md = main || Math.min(1000, Math.max(800, size.d * 0.6));
     for (const [k, label] of [['arm', 'Armrest width'], ['armH', 'Armrest height'], ['seatH', 'Seat height']]) if (g(label)) sp[k] = g(label);

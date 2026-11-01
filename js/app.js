@@ -667,7 +667,9 @@ async function unpack(str) {
 }
 function importLayout(data, fallbackName) {
   if (!Array.isArray(data?.items)) throw new Error('not a layout');
-  addLayout(String(data.name || fallbackName).slice(0, 60), data.items.slice(0, 300).map(cleanItem), typeof data.budget === 'number' && data.budget >= 0 ? data.budget : 2500);
+  const imported = data.items.slice(0, 300).map(cleanItem);
+  for (const it of imported) if (!it.sp && !it.custom) it.sp = shapeParams({ itemNo: it.itemNo, typeName: it.type, name: it.name }, it.shape, dims, it);   // links from before proportions
+  addLayout(String(data.name || fallbackName).slice(0, 60), imported, typeof data.budget === 'number' && data.budget >= 0 ? data.budget : 2500);
 }
 $('#l-share').addEventListener('click', async () => {
   let url;

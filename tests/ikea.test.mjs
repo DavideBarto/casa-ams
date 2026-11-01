@@ -38,5 +38,9 @@ const corner = { itemNo: 'k', typeName: 'Corner sofa, 5-seat' }, kdims = { k: { 
 assert.equal(shapeParams(corner, 'sofa', kdims, sizeOf(corner, 'sofa', kdims)).kind, 'corner');
 
 assert.equal(translate('divano con penisola'), 'sofa with chaise longue');
+assert.equal(translate('bastone per tende'), 'curtain rod');
+// a lone chaise module is a deep straight seat; free height 0 means no legs
+const lone = { itemNo: 'l', typeName: 'Chaise longue' }, ldims = { l: { Width: 90, 'Depth chaise longue': 163, 'Free height under furniture': 0 } };
+assert.deepEqual(shapeParams(lone, 'sofa', ldims, sizeOf(lone, 'sofa', ldims)), { leg: 0, kind: 'straight' });
 
 console.log('ikea tests passed');

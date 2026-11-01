@@ -51,6 +51,7 @@ function mat(kind, color) {
   if (!cache.has(key)) {
     const o = {
       fabric: { map: fabricTex, bumpMap: fabricTex, bumpScale: 0.6, roughness: 0.95 },
+      drape: { map: fabricTex, bumpMap: fabricTex, bumpScale: 0.6, roughness: 0.95, side: THREE.DoubleSide },
       wood: { map: woodTex, roughness: 0.55 },
       paint: { roughness: 0.42 },
       metal: { metalness: 0.85, roughness: 0.3 },
@@ -63,7 +64,7 @@ function mat(kind, color) {
 }
 const shade = (hex, k) => '#' + new THREE.Color(hex).multiplyScalar(k).getHexString();
 const text = it => `${it.name || ''} ${it.type || ''} ${it.design || ''}`.toLowerCase();
-const isWood = it => /oak|birch|pine|ash\b|walnut|beech|bamboo|acacia|teak|eucalyptus|veneer|wood|rattan|stained/.test(text(it)) && !/white stained|black-brown|effect, white/.test(text(it));
+const isWood = it => /oak|birch|pine|ash\b|walnut|beech|bamboo|acacia|teak|eucalyptus|veneer|wood|rattan|stained/.test(text(it)) && !/black-brown/.test(text(it));
 const body = it => mat(isWood(it) ? 'wood' : 'paint', it.color);
 /** Leg/frame colour: metal when the design names it, black when the piece is pale and the design mentions black. */
 function legMat(it) {
@@ -180,7 +181,7 @@ const B = {
       legsAt(g, corners4(w, d - 40, 60), leg, wood ? mt : legMat(it), 22, 0.8);
     }
     if (sp.storage) for (const s of [-1, 1]) for (const z of [-d / 4, d / 4]) {
-      const fr = P(g, s * (w / 2 + 2), z, 4, d / 2 - 40, 40, top - 120, mat('paint', shade(it.color, 0.92))); fr.rotation.y = 0;
+      P(g, s * (w / 2 + 2), z, 4, d / 2 - 40, 40, top - 120, mat('paint', shade(it.color, 0.92)));
     }
     const hbH = Math.max(h, top + 200), hbT = soft ? 110 : 40;
     R(g, 0, -d / 2 + hbT / 2, w + (soft ? 20 : 0), hbT, soft ? leg : 0, hbH - (soft ? leg : 0), mt, soft ? 50 : 6);
@@ -387,8 +388,7 @@ const B = {
     const pos = geo.attributes.position;
     for (let i = 0; i < pos.count; i++) pos.setZ(i, m(28) * Math.sin(pos.getX(i) / m(stack) * folds * Math.PI * 2));
     geo.computeVertexNormals();
-    const fab = mat('fabric', it.color).clone(); fab.side = THREE.DoubleSide;
-    add(g, geo, fab, 0, H - 150 - top / 2, 0);
+    add(g, geo, mat('drape', it.color), 0, H - 150 - top / 2, 0);
   },
   rod(g, it) {
     const { w } = it, c = mat('paint', it.color);
