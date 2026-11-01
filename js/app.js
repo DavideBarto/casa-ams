@@ -404,6 +404,7 @@ window.addEventListener('keydown', e => {
   if (mode === 'walk' && KEYS[e.code]) { walk.keys.add(KEYS[e.code]); e.preventDefault(); return; }
   if (e.key === 'Escape') return select(null);
   const it = selected && get(selected); if (!it || it.placed === false) return;
+  if (e.target.closest?.('#panel')) return;   // keys in the side panel scroll and navigate, they don't edit
   if ((e.key === 'r' || e.key === 'R') && !mod) rotate(it, e.shiftKey ? -90 : 90);   // leave Ctrl/Cmd+R to the browser
   else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); card.querySelector('[data-act="del"]')?.click(); }
   else if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); card.querySelector('[data-act="dup"]')?.click(); }
