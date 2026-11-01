@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildApartment, ROOMS, DOORS, BOUNDS } from './apartment.js';
-import { buildShape, HUNG } from './shapes.js';
+import { buildShape, HUNG, bedTop } from './shapes.js';
 import { checkLayout, gaps, corners, clearanceZones, solid, roomOf, aabb, parts, localParts, DECOR } from './fit.js';
 import { search, byItemNo, toItem, variantProduct, articleNo, thumb, uid, sizeOf, classify, shapeParams, translate } from './ikea.js';
 
@@ -42,7 +42,7 @@ function cleanItem(raw) {
     price: Math.max(0, num(raw.price)), url: ikeaUrl(raw.url), img: ikeaUrl(raw.img), measure: String(raw.measure || '').slice(0, 40), shape,
     w: Math.min(Math.max(num(raw.w, 600), 10), 9000), d: Math.min(Math.max(num(raw.d, 600), 10), 9000), h: Math.min(Math.max(num(raw.h, 600), 1), 2600),
     exact: !!raw.exact, color: /^#[0-9a-f]{6}$/i.test(raw.color) ? raw.color : '#c9c9c4', x: num(raw.x), y: num(raw.y), rot: num(raw.rot), elev: num(raw.elev),
-    side: raw.side === -1 ? -1 : 1, flip: raw.flip === -1 ? -1 : 1, sp: cleanSp(raw.sp), edited: !!raw.edited, placed: raw.placed !== false, qty: Math.max(1, Math.round(num(raw.qty, 1))), variants: raw.custom ? [] : undefined,
+    side: raw.side === -1 ? -1 : 1, elevSet: !!raw.elevSet, flip: raw.flip === -1 ? -1 : 1, sp: cleanSp(raw.sp), edited: !!raw.edited, placed: raw.placed !== false, qty: Math.max(1, Math.round(num(raw.qty, 1))), variants: raw.custom ? [] : undefined,
   };
 }
 
@@ -330,7 +330,7 @@ card.addEventListener('change', e => {
   remember();
   if (k === 'q') it.qty = Math.max(1, Math.round(v));
   else if (k === 'c') it.color = e.target.value;
-  else { const key = { w: 'w', d: 'd', h: 'h', e: 'elev' }[k]; it[key] = k === 'e' ? Math.max(0, v * 10) : Math.max(10, v * 10); if (k !== 'e' && !it.custom) it.edited = true; }
+  else { const key = { w: 'w', d: 'd', h: 'h', e: 'elev' }[k]; it[key] = k === 'e' ? Math.max(0, v * 10) : Math.max(10, v * 10); if (k === 'e') it.elevSet = true; if (k !== 'e' && !it.custom) it.edited = true; }
   renderItem(it); changed();
 });
 
@@ -723,8 +723,17 @@ function toast(text) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3200);
 }
 
+// Mattresses lie on whatever bed they're over (or the floor), unless you set the height yourself.
+function seatMattresses() {
+  for (const mt of items().filter(i => i.shape === 'mattress' && i.placed !== false && !i.elevSet)) {
+    const bed = items().find(b => b.shape === 'bed' && b.placed !== false && Math.hypot(b.x - mt.x, b.y - mt.y) < Math.min(b.w, b.d) / 2);
+    const elev = bed ? bedTop(bed) - 140 : 0;
+    if (mt.elev !== elev) { mt.elev = elev; renderItem(mt); }
+  }
+}
+
 function changed() {
-  save(); runChecks(); renderList(); renderCard();
+  seatMattresses(); save(); runChecks(); renderList(); renderCard();
   if (!$('#pane-layouts').hidden) renderLayouts();
   $('#t-undo').disabled = !undoStack.length; $('#t-redo').disabled = !redoStack.length;
   if (mode === 'walk') walkObstacles();

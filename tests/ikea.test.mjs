@@ -27,6 +27,7 @@ const col = d => colorFor({ validDesignText: d }, 'table');
 assert.equal(col('white/white/black'), '#f4f4f1');
 assert.equal(col('black/light brown stained'), '#b08a5c');
 assert.equal(col('white stained oak effect'), '#d9c4a0');
+assert.equal(col('Kelinge grey-turquoise'), '#6f8a85');
 
 // chaise and corner sofas take their L proportions from the product page
 const chaise = { itemNo: 'c', typeName: '3-seat sofa with chaise longue' };

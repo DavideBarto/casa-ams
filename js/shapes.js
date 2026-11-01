@@ -9,6 +9,8 @@ export const H = 2600;   // ceiling height (assumed)
 export const HUNG = new Set(['pendant', 'ceillamp', 'rod', 'curtain']);   // hang from the ceiling, ignore elevation
 const m = v => v / 1000;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+/** Top of a bed frame (mm): where its mattress sits. */
+export const bedTop = it => clamp(it.sp?.foot || 400, 220, 700);
 
 // ---------- materials ----------
 function canvasTex(size, draw, repeat = 1) {
@@ -174,7 +176,7 @@ const B = {
   bed(g, it) {
     const { w, d, h } = it, sp = it.sp || {}, soft = sp.soft, wood = isWood(it);
     const mt = soft ? mat('fabric', it.color) : body(it), leg = clamp(sp.leg ?? (soft ? 100 : 160), 0, 400);
-    const top = clamp(sp.foot || 400, 220, 700);
+    const top = bedTop(it);
     if (sp.storage) R(g, 0, 0, w, d, 0, top, mt, soft ? 30 : 6);                       // storage beds sit on their drawers
     else {
       R(g, 0, 0, w, d - 40, leg, top - leg, mt, soft ? 40 : 6);

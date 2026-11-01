@@ -148,7 +148,7 @@ export function sizeOf(product, shape, dims) {
 }
 
 const WORDS = [
-  [/dark grey|anthracite|dark gray/, '#50545b'], [/light grey|light gray/, '#c9ccd0'], [/grey|gray/, '#8d9198'],
+  [/dark grey|anthracite|dark gray/, '#50545b'], [/light grey|light gray/, '#c9ccd0'], [/grey-turquoise|grey-green/, '#6f8a85'], [/grey|gray/, '#8d9198'],
   [/black-brown|black brown/, '#3b302a'], [/white stained oak|white-stained oak/, '#d9c4a0'], [/black/, '#26282c'],
   [/oak|ash/, '#c8a676'], [/birch/, '#d8bf94'], [/pine/, '#d2a86a'], [/walnut/, '#7a5538'], [/bamboo|rattan|acacia|teak|eucalyptus/, '#b88a55'],
   [/beige|natural|cream|off-white/, '#e2d6bf'], [/light brown|brown stained/, '#b08a5c'], [/brown/, '#7b5a43'], [/green/, '#6f8d6a'], [/blue|turquoise/, '#4f6f9a'],
