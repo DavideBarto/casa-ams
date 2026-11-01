@@ -54,4 +54,11 @@ assert.equal(clearanceZones(item({ shape: 'bed', x: 2000, y: 1500, w: 1600, d: 2
 const g = gaps(item({ name: 'x', shape: 'box', x: 1000, y: 1500, w: 400, d: 400 }), [item({ name: 'y', shape: 'box', x: 2000, y: 1500, w: 400, d: 400 })], walls);
 assert.deepEqual([g.nx, g.px, g.ny, g.py], [800, 600, 1300, 1300]);
 
+// a sofa with a chaise longue is L-shaped: the empty corner in front of the seats is free
+const chaise = item({ name: 'chaise', shape: 'sofa', x: 2000, y: 1500, w: 2800, d: 1600, sp: { kind: 'chaise', md: 950 } });
+const pouf = item({ name: 'pouf', shape: 'pouf', x: 1300, y: 2100, w: 400, d: 400 });    // in front of the main seats, beside the chaise
+assert.deepEqual(checkLayout([chaise, pouf], ctx).filter(i => i.level === 'error'), []);
+assert.ok(checkLayout([chaise, { ...pouf, x: 3000 }], ctx).some(i => i.text === 'chaise overlaps pouf'));       // on the chaise itself
+assert.ok(checkLayout([{ ...chaise, flip: -1 }, pouf], ctx).some(i => i.text === 'chaise overlaps pouf'));    // chaise flipped to that side
+
 console.log('fit tests passed');

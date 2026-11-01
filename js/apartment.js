@@ -42,7 +42,7 @@ function canvasTex(draw) {
 
 export function buildApartment(scene) {
   const group = new THREE.Group(); scene.add(group);
-  const cutables = [];   // { mesh, z1, z2 }: shrink to 1 m in cutaway mode
+  const cutables = [];   // { mesh, z1, z2, wall }: shrink to 1 m when walls are low; walls lie flat when they're off
   const walls = [];      // plan rects that furniture and walkers can't pass
 
   const wallMat = M('#f3f2ef'), poche = M('#2a2d33');       // section-cut colour, like the black walls on the drawing
@@ -50,21 +50,21 @@ export function buildApartment(scene) {
   const glassMat = new THREE.MeshStandardMaterial({ color: 0xa9c7d8, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0.1, depthWrite: false });
   const frameMat = M('#3b3f45'), fixture = M('#ffffff', { roughness: 0.35 }), grey = M('#b9bdc2'), steel = M('#c9cdd1', { metalness: 0.6, roughness: 0.3 });
 
-  function slab(x1, y1, x2, y2, z1, z2, mat, { cut = true, solid = false, shadow = true } = {}) {
+  function slab(x1, y1, x2, y2, z1, z2, mat, { cut = true, solid = false, shadow = true, isWall = false } = {}) {
     const h = m(z2 - z1), geo = new THREE.BoxGeometry(m(x2 - x1), h, m(y2 - y1));
     geo.translate(0, h / 2, 0);
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(m((x1 + x2) / 2), m(z1), m((y1 + y2) / 2));
     mesh.castShadow = shadow; mesh.receiveShadow = true;
     group.add(mesh);
-    if (cut) cutables.push({ mesh, z1, z2 });
+    if (cut) cutables.push({ mesh, z1, z2, wall: isWall });
     if (solid) walls.push([x1, y1, x2, y2]);
     return mesh;
   }
-  const wall = (x1, y1, x2, y2, z1 = 0, z2 = H) => slab(x1, y1, x2, y2, z1, z2, wallMats, { solid: z1 < 1500 });
+  const wall = (x1, y1, x2, y2, z1 = 0, z2 = H) => slab(x1, y1, x2, y2, z1, z2, wallMats, { solid: z1 < 1500, isWall: true });
   const header = (x1, y1, x2, y2, z1 = 2150) => wall(x1, y1, x2, y2, z1, H);
-  const glass = (x1, y1, x2, y2, z1, z2, solid = false) => slab(x1, y1, x2, y2, z1, z2, glassMat, { solid, shadow: false });
-  const post = (x1, y1, x2, y2, z1 = 0, z2 = H) => slab(x1, y1, x2, y2, z1, z2, frameMat);
+  const glass = (x1, y1, x2, y2, z1, z2, solid = false) => slab(x1, y1, x2, y2, z1, z2, glassMat, { solid, shadow: false, isWall: true });
+  const post = (x1, y1, x2, y2, z1 = 0, z2 = H) => slab(x1, y1, x2, y2, z1, z2, frameMat, { isWall: true });
 
   function floor(x1, y1, x2, y2, tex, rep, z = 0) {
     const t = tex.clone(); t.needsUpdate = true; t.repeat.set(m(x2 - x1) / rep, m(y2 - y1) / rep);
@@ -155,8 +155,8 @@ export function buildApartment(scene) {
     const s = new THREE.Mesh(new THREE.SphereGeometry(m(170 + (i % 3) * 40), 12, 10), M(i % 2 ? '#5f8a55' : '#76a065'));
     s.position.set(m(-2400 + i * 270), m(640 + (i % 2) * 60), m(120 + (i % 3) * 50)); s.castShadow = true; group.add(s);
   }
-  slab(-2610, -160, -2570, 6440, -40, 1100, glassMat, { solid: true, shadow: false });
-  slab(-2610, 6400, -100, 6440, -40, 1100, glassMat, { solid: true, shadow: false });
+  slab(-2610, -160, -2570, 6440, -40, 1100, glassMat, { solid: true, shadow: false, isWall: true });
+  slab(-2610, 6400, -100, 6440, -40, 1100, glassMat, { solid: true, shadow: false, isWall: true });
   slab(-2620, -160, -2560, 6450, 1060, 1110, frameMat, { cut: false }); slab(-2620, 6390, -100, 6450, 1060, 1110, frameMat, { cut: false });
 
   // door swings drawn on the floor, like the arcs on the drawing
@@ -174,12 +174,13 @@ export function buildApartment(scene) {
     const o = new CSS2DObject(el); o.position.set(m(x), 0.05, m(y)); scene.add(o); return o;
   });
 
-  function setCut(low) {
-    for (const { mesh, z1, z2 } of cutables) {
-      const top = low ? Math.min(z2, 1000) : z2;
+  /** 'full' walls, 'low' (cut at 1 m), or 'off' (walls drawn as a dark outline on the floor, fittings kept at 1 m). */
+  function setWalls(mode) {
+    for (const { mesh, z1, z2, wall } of cutables) {
+      const top = mode === 'full' ? z2 : mode === 'off' && wall ? (z1 <= 0 ? Math.min(z2, 20) : z1) : Math.min(z2, 1000);
       mesh.visible = top > z1;
       mesh.scale.y = mesh.visible ? (top - z1) / (z2 - z1) : 1;
     }
   }
-  return { group, walls, labels, setCut };
+  return { group, walls, labels, setWalls };
 }

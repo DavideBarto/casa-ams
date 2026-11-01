@@ -4,12 +4,13 @@ A 3D furnishing planner for our Amsterdam apartment (54 m² + 16 m² balcony), b
 
 **Open it:** https://davidebarto.github.io/casa-ams/
 
-- Search the whole IKEA.nl catalogue live, with photos and current prices, and add pieces to the flat.
+- Search the whole IKEA.nl catalogue live, with photos and current prices, and add pieces to the flat. Italian words work too ("divano con penisola").
 - Swap any piece for another product or colour; "Fits here" shows whether the new one fits the spot.
 - Drag, rotate and resize furniture. Pieces snap flush against walls, and distance labels show the gap on every side.
 - Fit check: overlaps, walls, blocked doors and missing clearance (wardrobe doors, desk chair, around the bed).
 - Add things you already own as simple boxes.
-- 3D, plan and walk-through views, with cutaway walls.
+- Furniture modelled from each product's IKEA measurements: chaise, corner and U-shaped sofas, armrests, seat and leg heights, upholstered or wooden beds, drawers and doors, fabric and wood finishes.
+- 3D, plan and walk-through views; walls full height, cut at 1 m, or off (drawn on the floor).
 - Several layouts per browser; share a layout as a link or a file. Shopping list with a budget, per room.
 
 ## Run locally

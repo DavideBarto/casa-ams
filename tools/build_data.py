@@ -21,10 +21,12 @@ UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3
       "Accept-Encoding": "gzip"}
 MEASURE = re.compile(r'measurement-name">([^<]+)</span><span class="pipf-measurements-tab__measurement-value">([^<]+)<')
 UNIT = {"mm": 0.1, "cm": 1, "m": 100}
-KEEP = {"Width", "Depth", "Height", "Length", "Diameter", "Thickness", "Headboard height", "Min. height", "Max. height",
-        "Table length", "Table width", "Table height", "Shade diameter", "Base diameter", "Chair width", "Chair depth"}
+KEEP = {"Width", "Depth", "Height", "Length", "Diameter", "Thickness", "Headboard height", "Footboard height", "Min. height", "Max. height",
+        "Min. width", "Max. width", "Min. depth", "Max. depth", "Table length", "Table width", "Table height", "Shade diameter",
+        "Base diameter", "Chair width", "Chair depth", "Width right", "Width left", "Depth chaise longue", "Armrest width",
+        "Armrest height", "Seat width", "Seat depth", "Seat height", "Free height under furniture"}
 
-QUERIES = ["sofa", "sofa-bed", "corner sofa", "armchair", "footstool", "bed frame", "mattress", "wardrobe", "pax wardrobe",
+QUERIES = ["sofa", "sofa-bed", "corner sofa", "sofa with chaise longue", "u-shaped sofa", "armchair", "footstool", "bed frame", "mattress", "wardrobe", "pax wardrobe",
            "chest of drawers", "bedside table", "desk", "office chair", "dining table", "dining chair", "table and chairs",
            "coffee table", "side table", "tv bench", "bookcase", "shelving unit", "sideboard", "cabinet", "shoe cabinet",
            "hallway furniture", "coat rack", "bench", "bar stool", "floor lamp", "table lamp", "pendant lamp", "ceiling lamp",

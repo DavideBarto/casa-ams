@@ -4,8 +4,8 @@ import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildApartment, ROOMS, DOORS, BOUNDS } from './apartment.js';
 import { buildShape, HUNG } from './shapes.js';
-import { checkLayout, gaps, footprint, corners, clearanceZones, solid, roomOf, aabb, DECOR } from './fit.js';
-import { search, byItemNo, toItem, variantProduct, articleNo, thumb, uid, sizeOf, classify } from './ikea.js';
+import { checkLayout, gaps, corners, clearanceZones, solid, roomOf, aabb, parts, localParts, DECOR } from './fit.js';
+import { search, byItemNo, toItem, variantProduct, articleNo, thumb, uid, sizeOf, classify, shapeParams, translate } from './ikea.js';
 
 const $ = s => document.querySelector(s);
 const m = v => v / 1000;
@@ -42,14 +42,25 @@ function cleanItem(raw) {
     price: Math.max(0, num(raw.price)), url: ikeaUrl(raw.url), img: ikeaUrl(raw.img), measure: String(raw.measure || '').slice(0, 40), shape,
     w: Math.min(Math.max(num(raw.w, 600), 10), 9000), d: Math.min(Math.max(num(raw.d, 600), 10), 9000), h: Math.min(Math.max(num(raw.h, 600), 1), 2600),
     exact: !!raw.exact, color: /^#[0-9a-f]{6}$/i.test(raw.color) ? raw.color : '#c9c9c4', x: num(raw.x), y: num(raw.y), rot: num(raw.rot), elev: num(raw.elev),
-    side: raw.side === -1 ? -1 : 1, edited: !!raw.edited, placed: raw.placed !== false, qty: Math.max(1, Math.round(num(raw.qty, 1))), variants: raw.custom ? [] : undefined,
+    side: raw.side === -1 ? -1 : 1, flip: raw.flip === -1 ? -1 : 1, sp: cleanSp(raw.sp), edited: !!raw.edited, placed: raw.placed !== false, qty: Math.max(1, Math.round(num(raw.qty, 1))), variants: raw.custom ? [] : undefined,
   };
+}
+
+function cleanSp(sp) {
+  if (!sp || typeof sp !== 'object') return undefined;
+  const out = {};
+  for (const k of ['leg', 'md', 'arm', 'armH', 'seatH', 'foot']) if (Number.isFinite(+sp[k])) out[k] = Math.min(Math.max(+sp[k], 0), 5000);
+  for (const k of ['soft', 'storage']) if (sp[k]) out[k] = true;
+  if (['straight', 'chaise', 'corner', 'u'].includes(sp.kind)) out.kind = sp.kind;
+  return out;
 }
 
 // ---------- saved layouts (this browser) ----------
 const KEY = 'casa-ams:v1';
 let store = (() => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } })();
 if (!store?.layouts?.[store.current]) store = { current: 'a', layouts: { a: { name: 'Suggested plan', budget: 2500, items: suggestedItems() } } };
+// layouts saved before proportions existed: work them out once from the measurements
+for (const l of Object.values(store.layouts)) for (const it of l.items) if (!it.sp && !it.custom) it.sp = shapeParams({ itemNo: it.itemNo, typeName: it.type, name: it.name }, it.shape, dims, it);
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch { /* private mode: keeps working, just not saved */ } };
 const L = () => store.layouts[store.current];
 const items = () => L().items;
@@ -70,6 +81,8 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;   // softer highlights, closer to a photo
+renderer.toneMappingExposure = 1.05;
 stage.prepend(renderer.domElement);
 const labelRenderer = new CSS2DRenderer({ element: $('#labels') });
 
@@ -118,9 +131,12 @@ function renderItem(it) {
   dropView(it.uid);
   if (it.placed === false) return;
   const group = buildShape(it);
-  const f = footprint(it);
-  const foot = new THREE.Mesh(new THREE.PlaneGeometry(m(2 * f.hw), m(2 * f.hd)), footMats.idle);
-  foot.rotation.x = -Math.PI / 2; foot.position.y = 0.008; foot.renderOrder = 2;
+  const foot = new THREE.Group();   // footprint: one rectangle, or an L/U for corner and chaise sofas
+  for (const p of localParts(it)) {
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(m(2 * p.hw), m(2 * p.hd)), footMats.idle);
+    plane.rotation.x = -Math.PI / 2; plane.position.set(m(p.lx), 0.008, m(p.lz)); plane.renderOrder = 2;
+    foot.add(plane);
+  }
   group.add(foot);
   group.traverse(o => { o.userData.uid = it.uid; });
   furniture.add(group);
@@ -133,18 +149,18 @@ function placeView(it) {
 }
 
 // ---------- view modes ----------
-let mode = 'orbit', cut = true, labelsOn = true, zonesOn = false, selected = null, issues = [];
+let mode = 'orbit', walls = 'low', labelsOn = true, zonesOn = false, selected = null, issues = [];
 const center = new THREE.Vector3(3.36, 0, 2.1);
 
 function applyVisibility() {
-  apt.setCut(cut);
+  apt.setWalls(walls);
   const level = new Map();
   for (const is of issues) for (const id of is.uids) if (level.get(id) !== 'error') level.set(id, is.level);
   for (const it of items()) {
     const v = views.get(it.uid); if (!v) continue;
-    v.group.visible = !(HUNG.has(it.shape) && (cut || mode === 'top'));
+    v.group.visible = !(HUNG.has(it.shape) && (walls !== 'full' || mode === 'top'));
     const state = it.uid === selected ? 'sel' : level.get(it.uid) || 'idle';
-    v.foot.material = footMats[state];
+    for (const plane of v.foot.children) plane.material = footMats[state];
     v.foot.visible = mode === 'top' || state !== 'idle';
   }
   for (const l of apt.labels) l.visible = labelsOn && mode !== 'walk';
@@ -167,7 +183,7 @@ function topView() {
 
 const walk = { pos: new THREE.Vector3(), yaw: 0, pitch: 0, keys: new Set(), pad: new Set(), obstacles: [] };
 function walkObstacles() {
-  walk.obstacles = [...apt.walls, ...items().filter(it => solid(it) && (it.elev || 0) < 1700).map(it => aabb(corners(footprint(it))))];
+  walk.obstacles = [...apt.walls, ...items().filter(it => solid(it) && (it.elev || 0) < 1700).flatMap(it => parts(it).map(p => aabb(corners(p))))];
 }
 function blocked(x, z) {
   const px = x * 1000, pz = z * 1000, r = 200, [bx1, by1, bx2, by2] = BOUNDS;
@@ -272,6 +288,7 @@ function renderCard() {
     <div class="tools">
       ${it.placed !== false ? `<button data-act="rotl" title="Rotate left (Shift+R)" aria-label="Rotate left">⟲</button><button data-act="rotr" title="Rotate right (R)" aria-label="Rotate right">⟳</button>
       <button data-act="dup">Duplicate</button>` : ''}
+      ${['chaise', 'corner'].includes(it.sp?.kind) && it.shape === 'sofa' ? '<button data-act="flip" title="Put the chaise or corner on the other side">Flip chaise</button>' : ''}
       ${it.custom ? '' : '<button data-act="swap">Swap…</button>'}
       <button data-act="del" class="danger">Remove</button>
     </div>
@@ -299,6 +316,7 @@ card.addEventListener('click', e => {
   else if (act === 'rotl' || act === 'rotr') rotate(it, act === 'rotl' ? -90 : 90);
   else if (act === 'dup') { remember(); const copy = { ...structuredClone(it), uid: uid(), x: it.x + 300, y: it.y + 300 }; items().push(copy); renderItem(copy); changed(); select(copy.uid); }
   else if (act === 'swap') openSwap(it);
+  else if (act === 'flip') { remember(); it.flip = it.flip === -1 ? 1 : -1; renderItem(it); changed(); }
   else if (act === 'del') { remember(); L().items = items().filter(i => i !== it); dropView(it.uid); select(null); changed(); }
   else if (variant && variant !== it.itemNo) {
     const v = it.variants.find(x => x.itemNo === variant);
@@ -324,7 +342,7 @@ function rotate(it, delta) {
 function replaceWith(old, product, variants) {
   remember();
   const next = toItem(product, dims);
-  Object.assign(next, { uid: old.uid, x: old.x, y: old.y, rot: old.rot, placed: old.placed, qty: old.qty, side: old.side,
+  Object.assign(next, { uid: old.uid, x: old.x, y: old.y, rot: old.rot, placed: old.placed, qty: old.qty, side: old.side, flip: old.flip,
     elev: next.shape === old.shape ? old.elev : next.elev, ...(variants ? { variants } : {}) });
   L().items = items().map(i => (i === old ? next : i));
   renderItem(next); changed(); select(next.uid);
@@ -522,7 +540,8 @@ async function runSearch(more = false) {
   Object.assign(results, { q, size: more ? results.size + 24 : 24, loading: true, error: '' });
   renderResults();
   try {
-    const r = await search(q, { size: results.size, sort: $('#sort').value || undefined });
+    results.en = translate(q);
+    const r = await search(results.en, { size: results.size, sort: $('#sort').value || undefined });
     if (req !== results.req) return;
     Object.assign(results, { products: r.products, total: r.total });
   } catch {
@@ -556,8 +575,9 @@ function renderResults() {
   if (results.loading && !results.products.length) { list.innerHTML = '<p class="muted">Searching IKEA.nl…</p>'; return; }
   if (results.error) { list.innerHTML = `<p class="muted">${esc(results.error)}</p>`; return; }
   if (!results.q) { list.innerHTML = '<p class="muted">Search the IKEA.nl catalogue, or pick a category above. Prices and photos are live.</p>'; $('#more').hidden = true; return; }
-  if (!results.products.length) { list.innerHTML = `<p class="muted">Nothing found for “${esc(results.q)}”.</p>`; $('#more').hidden = true; return; }
-  list.innerHTML = results.products.map(p => {
+  if (!results.products.length) { list.innerHTML = `<p class="muted">Nothing found for “${esc(results.en || results.q)}”. Try English product words or an IKEA name.</p>`; $('#more').hidden = true; return; }
+  const note = results.en && results.en !== results.q.toLowerCase() ? `<li class="muted">Searched IKEA.nl for “${esc(results.en)}”.</li>` : '';
+  list.innerHTML = note + results.products.map(p => {
     const shape = classify(p.typeName), size = sizeOf(p, shape, dims);
     const sz = `${Math.round(size.w / 10)} × ${Math.round(size.d / 10)} × ${Math.round(size.h / 10)} cm${size.exact ? '' : ' (est.)'}`;
     return `<li class="res">
@@ -684,7 +704,11 @@ $('#v-orbit').onclick = () => setMode('orbit');
 $('#v-top').onclick = () => setMode('top');
 $('#v-walk').onclick = () => setMode('walk');
 const toggle = (id, read, write) => { const b = $(id); b.onclick = () => { write(!read()); b.setAttribute('aria-pressed', String(read())); applyVisibility(); drawOverlay(); }; };
-toggle('#t-cut', () => cut, v => { cut = v; });
+for (const w of ['full', 'low', 'off']) $('#w-' + w).onclick = () => {
+  walls = w;
+  for (const x of ['full', 'low', 'off']) $('#w-' + x).setAttribute('aria-pressed', String(x === w));
+  applyVisibility(); drawOverlay();
+};
 toggle('#t-labels', () => labelsOn, v => { labelsOn = v; });
 toggle('#t-zones', () => zonesOn, v => { zonesOn = v; });
 $('#t-undo').onclick = () => travel(undoStack, redoStack);
@@ -712,6 +736,9 @@ function resize() {
 }
 new ResizeObserver(resize).observe(stage);
 resize();
+
+// ?debug exposes the scene for automated screenshots (tests only)
+if (new URLSearchParams(location.search).has('debug')) window.casa = { THREE, renderer, scene, camera, controls, resize, items, get };
 
 const clock = new THREE.Clock();
 function frame() {
