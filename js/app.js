@@ -407,7 +407,7 @@ renderer.domElement.addEventListener('dblclick', e => {
   if (p) controls.moveTo(p.x, 0, p.z, smooth());   // camera travels with it, so Plan stays top-down
 });
 renderer.domElement.addEventListener('pointermove', e => {
-  if (!press) return;
+  if (!press || !e.isPrimary) return;
   if (press.look) {
     walk.yaw -= (e.clientX - press.lx) * 0.005;
     walk.pitch = Math.max(-1.2, Math.min(1.2, walk.pitch - (e.clientY - press.ly) * 0.004));
@@ -429,7 +429,7 @@ renderer.domElement.addEventListener('pointermove', e => {
   runChecks();
 });
 renderer.domElement.addEventListener('pointerup', e => {
-  if (!press) return;
+  if (!press || !e.isPrimary) return;
   const d = press.drag, click = Math.hypot(e.clientX - press.x, e.clientY - press.y) < 6;
   if (d) { controls.enabled = mode !== 'walk'; if (d.moved) changed(); }
   else if (click) select(hit(e));
@@ -782,7 +782,7 @@ function changed() {
 let lowRes = false;   // drawing at 1x while the view moves
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;
-  if (!lowRes) renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setPixelRatio(lowRes ? 1 : Math.min(devicePixelRatio, 2));
   renderer.setSize(w, h, false); labelRenderer.setSize(w, h);
   camera.aspect = w / Math.max(h, 1); camera.updateProjectionMatrix();
   invalidate();
@@ -812,7 +812,7 @@ function frame() {
   } else moving = controls.update(dt);
   // While the view moves, draw at 1× pixels (~30% cheaper frames); one sharp frame when it stops.
   const active = moving || !!press?.drag?.moved, fullRes = Math.min(devicePixelRatio, 2);   // read live: the window may change screens
-  if (fullRes > 1 && active !== lowRes) { lowRes = active; renderer.setPixelRatio(active ? 1 : fullRes); resize(); }
+  if (fullRes > 1 && active !== lowRes) { lowRes = active; resize(); }
   if (!moving && !dirty) return;
   dirty = false;
   if (selBox.visible) { const v = views.get(selected); if (v) selBox.setFromObject(v.group); }
