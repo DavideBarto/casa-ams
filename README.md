@@ -11,6 +11,7 @@ A 3D furnishing planner for our Amsterdam apartment (54 m² + 16 m² balcony), b
 - Add things you already own as simple boxes.
 - Furniture modelled from each product's IKEA measurements: chaise, corner and U-shaped sofas, armrests, seat and leg heights, upholstered or wooden beds, drawers and doors, fabric and wood finishes.
 - 3D, plan and walk-through views; walls full height, cut at 1 m, or off (drawn on the floor).
+- Navigation by [camera-controls](https://github.com/yomotsu/camera-controls): zoom to the pointer, smooth moves, double-click to focus, jump to a room. The scene is drawn only when something changes, at 1× resolution while moving.
 - Several layouts per browser; share a layout as a link or a file. Shopping list with a budget, per room.
 
 ## Run locally

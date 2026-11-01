@@ -217,6 +217,15 @@
         <button id="t-redo" disabled aria-label="Redo">↷</button>
       </div>
       <button class="tog" id="t-reset" aria-pressed="false">Reset view</button>
+      <select class="tog" id="room-go" aria-label="Go to a room">
+        <option value="">Go to…</option>
+        <option value="all">Whole flat</option>
+        <option value="liv">Living room</option>
+        <option value="bed">Bedroom</option>
+        <option value="bath">Bathroom</option>
+        <option value="hall">Hall</option>
+        <option value="balc">Balcony</option>
+      </select>
     </div>
     <div class="hint" id="hint">Drag furniture to move it · drag empty space to orbit · R rotates · Delete removes · Ctrl+Z undoes</div>
     <div class="card" id="card" hidden></div>
@@ -329,7 +338,8 @@
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+  "camera-controls": "https://cdn.jsdelivr.net/npm/camera-controls@3.1.2/dist/camera-controls.module.js"
 } }
 </script>
 <script type="module" src="js/app.js"></script>
