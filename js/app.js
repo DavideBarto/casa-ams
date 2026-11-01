@@ -722,13 +722,13 @@ $('#l-glb').addEventListener('click', async () => {
   const keep = walls;
   walls = 'full'; applyVisibility();                              // real wall heights
   for (const v of views.values()) { v.group.visible = true; v.foot.visible = false; }   // ceiling lamps and curtains too, no footprints
-  selBox.visible = false;
+  apt.swings.visible = false;
   try {
     const glb = await new GLTFExporter().parseAsync([apt.group, furniture], { binary: true, onlyVisible: true });
     download(new Blob([glb], { type: 'model/gltf-binary' }), 'glb');
     toast('3D model downloaded. Open it in Blender (File › Import › glTF) or drag it into Unreal.');
   } catch { toast("Couldn't create the 3D file in this browser."); }
-  walls = keep; select(selected);
+  apt.swings.visible = true; walls = keep; select(selected);
 });
 $('#l-import').addEventListener('change', async e => {
   const file = e.target.files[0]; if (!file) return;

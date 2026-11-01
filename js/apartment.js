@@ -45,11 +45,13 @@ export function buildApartment(scene) {
   const cutables = [];   // { mesh, z1, z2, wall }: shrink to 1 m when walls are low; walls lie flat when they're off
   const walls = [];      // plan rects that furniture and walkers can't pass
 
-  const wallMat = M('#f3f2ef'), poche = M('#2a2d33');       // section-cut colour, like the black walls on the drawing
+  // Own (uncached) materials with names for the .glb export, so renaming them can't touch furniture sharing a colour.
+  const named = (name, color, o = {}) => new THREE.MeshStandardMaterial({ name, color, roughness: 0.6, ...o });
+  const wallMat = named('wall', '#f3f2ef'), poche = named('wall-top', '#2a2d33');   // section-cut colour, like the black walls on the drawing
   const wallMats = [wallMat, wallMat, poche, wallMat, wallMat, wallMat];
   const glassMat = new THREE.MeshStandardMaterial({ name: 'glass', color: 0xa9c7d8, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0.1, depthWrite: false });
-  const frameMat = M('#3b3f45'), fixture = M('#ffffff', { roughness: 0.35 }), grey = M('#b9bdc2'), steel = M('#c9cdd1', { metalness: 0.6, roughness: 0.3 });
-  for (const [mt, name] of [[wallMat, 'wall'], [poche, 'wall-top'], [frameMat, 'frame'], [fixture, 'ceramic'], [grey, 'appliance'], [steel, 'steel']]) mt.name = name;
+  const frameMat = named('frame', '#3b3f45'), fixture = named('ceramic', '#ffffff', { roughness: 0.35 }), grey = named('appliance', '#b9bdc2');
+  const steel = named('steel', '#c9cdd1', { metalness: 0.6, roughness: 0.3 });
 
   function slab(x1, y1, x2, y2, z1, z2, mat, { cut = true, solid = false, shadow = true, isWall = false } = {}) {
     const h = m(z2 - z1), geo = new THREE.BoxGeometry(m(x2 - x1), h, m(y2 - y1));
@@ -131,7 +133,7 @@ export function buildApartment(scene) {
   slab(7330, 3530, 7366, 4470, 0, 2150, M('#e9e4da')); slab(7340, 3500, 7368, 5400, 2160, 2200, frameMat);   // bathroom sliding door
 
   // kitchen (comes with the flat)
-  const front = M('#e2e0da'); front.name = 'kitchen-front';
+  const front = named('kitchen-front', '#e2e0da');
   slab(3670, 2200, 4270, 2800, 0, 2200, front, { solid: true });
   slab(3670, 2800, 4270, 5750, 0, 870, front, { solid: true });
   slab(3650, 2800, 4270, 5750, 870, 910, M('#45484e'), { cut: false });
@@ -146,7 +148,7 @@ export function buildApartment(scene) {
   // bathroom, toilet, washer + dryer (appliances not included)
   slab(7470, 2350, 8490, 3450, 0, 40, M('#d4d8db'), { cut: false }); glass(7470, 3430, 8290, 3450, 40, 2000);
   slab(8540, 3700, 8990, 4300, 820, 860, fixture); slab(8540, 4700, 8990, 5300, 820, 860, fixture);
-  for (const y of [3750, 4750]) slab(8970, y, 8988, y + 500, 1100, 1900, M('#c9d6df', { metalness: 0.5, roughness: 0.15 }));
+  for (const y of [3750, 4750]) slab(8970, y, 8988, y + 500, 1100, 1900, named('mirror', '#c9d6df', { metalness: 0.5, roughness: 0.15 }));
   slab(6620, -1210, 6990, -600, 0, 420, fixture, { cut: false }); slab(6620, -1210, 6990, -1050, 420, 900, fixture); slab(7110, -760, 7290, -460, 780, 860, fixture);
   slab(6420, 1300, 7020, 1900, 0, 850, grey, { cut: false }); slab(6420, 1300, 7020, 1900, 860, 1710, grey);
 
@@ -162,11 +164,12 @@ export function buildApartment(scene) {
 
   // door swings drawn on the floor, like the arcs on the drawing
   const lineMat = new THREE.LineBasicMaterial({ color: 0x3b3f45 });
+  const swings = new THREE.Group(); swings.name = 'Door swings'; group.add(swings);   // plan drawing only, left out of the 3D export
   for (const { hx, hy, r, a0, a1 } of DOORS) {
     const pts = [new THREE.Vector3(m(hx), 0.004, m(hy))];
     for (let i = 0; i <= 24; i++) { const a = (a0 + (a1 - a0) * i / 24) * Math.PI / 180; pts.push(new THREE.Vector3(m(hx + r * Math.cos(a)), 0.004, m(hy + r * Math.sin(a)))); }
     pts.push(pts[0].clone());
-    group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat));
+    swings.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat));
   }
 
   const labels = [...ROOMS.map(r => r.label), KITCHEN_LABEL].map(([name, sub, x, y]) => {
@@ -183,5 +186,5 @@ export function buildApartment(scene) {
       mesh.scale.y = mesh.visible ? (top - z1) / (z2 - z1) : 1;
     }
   }
-  return { group, walls, labels, setWalls };
+  return { group, walls, labels, swings, setWalls };
 }

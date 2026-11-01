@@ -100,9 +100,15 @@ def polyhaven(asset, out_dir, res='1k'):
         if not url:
             continue
         path = os.path.join(folder, os.path.basename(url))
-        if not os.path.exists(path):
-            urllib.request.urlretrieve(url, path)
-        maps[key] = path
+        try:
+            if not os.path.exists(path):
+                urllib.request.urlretrieve(url, path + '.part')
+                os.replace(path + '.part', path)
+            maps[key] = path
+        except OSError as e:
+            print(f'[casa] skipped {name} map ({e})')
+    if 'diff' not in maps:
+        return {}
     return maps
 
 

@@ -423,7 +423,7 @@ const B = {
     R(g, 0, 0, Math.min(w * 0.3, 350), d * 0.8, 0, 14, mat('metal', '#2a2c30'), 6);
     P(g, 0, -10, 50, 30, 14, 70, mat('metal', '#2a2c30'));
     R(g, 0, 0, w, 30, 80, h - 80, mat('gloss', '#111214'), 6);
-    P(g, 0, 16, w - 16, 2, 88, h - 96, M('#0b0d12', { roughness: 0.08, emissive: '#0d1626', emissiveIntensity: 0.4 }));
+    P(g, 0, 16, w - 16, 2, 88, h - 96, M('#0b0d12', { name: 'screen', roughness: 0.08, emissive: '#0d1626', emissiveIntensity: 0.4 }));
   },
   diningset(g, it) {
     const { w, d, h } = it, n = chairCount(it);
