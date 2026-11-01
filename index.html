@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Casa AMS Planner</title>
+<meta name="description" content="3D furnishing planner for our Amsterdam apartment, with live IKEA.nl search, prices and fit checks.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 15 16 5l12 10v12H4z' fill='%232b4c9b'/%3E%3Cpath d='M13 27v-8h6v8' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Layout: full-bleed 3D stage, with a right-hand "title block" panel like the legend on an architect's drawing. Stacks on phones. */
+  :root {
+    --bg: #eceff4; --panel: #f7f8fa; --ink: #1b2330; --muted: #5b6676; --line: #d3d9e2;
+    --accent: #2b4c9b; --accent-ink: #ffffff; --accent-soft: #dfe6f6;   /* Delft blue */
+    --good: #2c7650; --warn: #a8641a; --bad: #b4302a; --warn-soft: #f8ead5; --bad-soft: #f6dddb; --good-soft: #dcefe3;
+    --scene: #dde3ea; --overlay: rgba(247, 248, 250, 0.95); --shadow: 0 6px 24px rgba(27, 35, 48, 0.14);
+    --font-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+    --font-body: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10151d; --panel: #151b25; --ink: #e5e9ef; --muted: #98a3b3; --line: #29323f;
+      --accent: #8fb0ff; --accent-ink: #0c1322; --accent-soft: #1f2b47;
+      --good: #6cc08f; --warn: #f0b46c; --bad: #ff8a80; --warn-soft: #3a2d18; --bad-soft: #3d1f1d; --good-soft: #193425;
+      --scene: #19202b; --overlay: rgba(21, 27, 37, 0.95); --shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10151d; --panel: #151b25; --ink: #e5e9ef; --muted: #98a3b3; --line: #29323f;
+    --accent: #8fb0ff; --accent-ink: #0c1322; --accent-soft: #1f2b47;
+    --good: #6cc08f; --warn: #f0b46c; --bad: #ff8a80; --warn-soft: #3a2d18; --bad-soft: #3d1f1d; --good-soft: #193425;
+    --scene: #19202b; --overlay: rgba(21, 27, 37, 0.95); --shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  button:disabled { cursor: default; opacity: 0.45; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  img { max-width: 100%; }
+
+  .app { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 420px; }
+  .stage { position: relative; min-width: 0; overflow: hidden; background: var(--scene); touch-action: none; }
+  .stage canvas { display: block; width: 100%; height: 100%; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+
+  .toolbar { position: absolute; top: max(12px, env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); right: 16px; display: flex; flex-wrap: wrap; gap: 8px; pointer-events: none; }
+  .toolbar > * { pointer-events: auto; }
+  .seg { display: inline-flex; background: var(--overlay); border: 1px solid var(--line); border-radius: 10px; padding: 3px; box-shadow: var(--shadow); }
+  .seg button, .tog { border: 0; background: transparent; padding: 7px 11px; border-radius: 7px; font-weight: 600; font-size: 13px; white-space: nowrap; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  .tog { background: var(--overlay); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 10px; padding: 8px 11px; }
+  .tog[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .hint { position: absolute; bottom: 14px; left: max(16px, env(safe-area-inset-left, 0px)); right: 16px; width: fit-content; max-width: calc(100% - 32px); font-size: 12px; color: var(--muted); background: var(--overlay); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); }
+
+  .rl { text-align: center; color: #1b2330; font-size: 11px; line-height: 1.2; text-shadow: 0 0 3px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.8); white-space: nowrap; }
+  .rl b { display: block; font-family: var(--font-display); font-stretch: 80%; font-weight: 700; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rl span { font-family: var(--font-mono); font-size: 10.5px; }
+  .gd { font-family: var(--font-mono); font-size: 11px; font-weight: 500; background: var(--accent); color: var(--accent-ink); padding: 1px 5px; border-radius: 4px; white-space: nowrap; }
+
+  /* selected piece */
+  .card { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: 50px; width: min(380px, calc(100% - 32px)); max-height: calc(100% - 110px); overflow: auto;
+    background: var(--overlay); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 12px 14px 14px; display: grid; gap: 10px; }
+  .card-top { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 12px; align-items: start; }
+  .card-top img, .swatch-big { width: 64px; height: 64px; border-radius: 8px; object-fit: contain; background: #fff; border: 1px solid var(--line); display: block; }
+  .card h2 { margin: 0; font-family: var(--font-display); font-stretch: 78%; font-weight: 750; font-size: 22px; line-height: 1.05; }
+  .card .type { color: var(--muted); font-size: 12.5px; }
+  .card .money { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 500; margin-top: 2px; }
+  .card .x { border: 0; background: transparent; font-size: 22px; line-height: 1; padding: 0 4px; color: var(--muted); }
+  .tools { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tools button { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 6px 10px; font-weight: 600; font-size: 13px; min-width: 38px; }
+  .tools button.danger { color: var(--bad); }
+  .variants { display: flex; flex-wrap: wrap; gap: 6px; }
+  .vs { padding: 2px; border: 2px solid transparent; border-radius: 8px; background: #fff; line-height: 0; }
+  .vs.on { border-color: var(--accent); }
+  .vs img { width: 40px; height: 40px; object-fit: contain; }
+  .size { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12.5px; color: var(--muted); }
+  .size input[type="number"] { width: 62px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); font-family: var(--font-mono); font-size: 12.5px; }
+  .size input[type="color"] { width: 36px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; vertical-align: middle; }
+  .size small { flex-basis: 100%; }
+  .fitmsg { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13px; }
+  .fitmsg li { padding: 5px 8px; border-radius: 6px; }
+  .fitmsg .error, #fit .error button { background: var(--bad-soft); color: var(--bad); }
+  .fitmsg .warn, #fit .warn button { background: var(--warn-soft); color: var(--warn); }
+  .fitok { margin: 0; font-size: 13px; color: var(--good); }
+  .btn, .primary { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; background: var(--accent); color: var(--accent-ink); font-weight: 600; padding: 8px 13px; border-radius: 9px; border: 0; justify-self: start; }
+
+  .pad { position: absolute; right: 16px; bottom: 16px; display: grid; grid-template-columns: repeat(3, 48px); grid-template-rows: repeat(2, 48px); gap: 6px; }
+  .pad button { border: 1px solid var(--line); background: var(--overlay); border-radius: 10px; font-size: 18px; box-shadow: var(--shadow); touch-action: none; user-select: none; -webkit-user-select: none; }
+  .pad .up { grid-column: 2; grid-row: 1; } .pad .lt { grid-column: 1; grid-row: 2; } .pad .dn { grid-column: 2; grid-row: 2; } .pad .rt { grid-column: 3; grid-row: 2; }
+
+  .toast { position: fixed; left: 50%; bottom: max(24px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--panel); padding: 9px 14px; border-radius: 10px; font-size: 13px; z-index: 20; max-width: calc(100% - 32px); box-shadow: var(--shadow); }
+
+  /* panel */
+  .panel { min-width: 0; overflow-y: auto; background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; }
+  .panel-in { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 28px; display: grid; gap: 18px; align-content: start; }
+  .brand { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .brand h1 { margin: 0; font-family: var(--font-display); font-stretch: 72%; font-weight: 800; font-size: 34px; line-height: 0.95; text-transform: uppercase; }
+  .brand span { color: var(--muted); font-size: 12.5px; text-align: right; }
+  .tabs { position: sticky; top: 0; z-index: 2; display: flex; background: var(--panel); border-bottom: 1.5px solid var(--ink); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: max(10px, env(safe-area-inset-top, 0px)); gap: 4px; }
+  .tabs button { border: 0; background: transparent; padding: 9px 10px 8px; font-family: var(--font-display); font-stretch: 85%; font-weight: 700; font-size: 14.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -1.5px; }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+
+  .block { border: 1.5px solid var(--ink); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .block > div { padding: 8px 10px; border-left: 1px solid var(--ink); min-width: 0; }
+  .block > div:first-child { border-left: 0; }
+  .lbl { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+  .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 500; font-size: 15px; }
+  .block input { width: 100%; border: 0; border-bottom: 1px dashed var(--muted); background: transparent; font-family: var(--font-mono); font-size: 15px; font-weight: 500; padding: 0; }
+  .meter { grid-column: 1 / -1; border-top: 1px solid var(--ink); padding: 10px; display: grid; gap: 6px; }
+  .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--good); border-radius: 4px; transition: width 0.3s; }
+  .bar.over i { background: var(--bad); }
+  .meter small, .muted { color: var(--muted); font-size: 12.5px; margin: 0; }
+
+  #fit ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
+  #fit button { width: 100%; text-align: left; border: 0; border-radius: 6px; padding: 6px 8px; font-size: 13px; }
+  .chip { display: inline-block; margin: 0; padding: 4px 10px; border-radius: 999px; font-weight: 600; font-size: 13px; }
+  .chip.ok { background: var(--good-soft); color: var(--good); }
+  .chip.warn { background: var(--warn-soft); color: var(--warn); }
+  .chip.error { background: var(--bad-soft); color: var(--bad); }
+
+  .room h3 { margin: 0 0 4px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-family: var(--font-display); font-stretch: 80%; font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1.5px solid var(--ink); padding-bottom: 4px; }
+  .room h3 .num { font-size: 13.5px; letter-spacing: 0; }
+  .items { list-style: none; margin: 0; padding: 0; }
+  .item { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto 20px; gap: 4px 10px; align-items: center; padding: 6px 4px; border-bottom: 1px solid var(--line); border-radius: 6px; }
+  .item.sel { background: var(--accent-soft); }
+  .item img, .swatch { width: 36px; height: 36px; border-radius: 6px; object-fit: contain; background: #fff; border: 1px solid var(--line); display: block; }
+  .pick { border: 0; background: transparent; text-align: left; padding: 0; min-width: 0; }
+  .pick strong { font-weight: 600; }
+  .t { display: block; color: var(--muted); font-size: 12px; }
+  .mono { font-family: var(--font-mono); font-size: 11.5px; }
+  .price { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13px; text-align: right; white-space: nowrap; }
+  .price small { display: block; color: var(--muted); font-size: 11px; }
+  .item a, .res a { color: var(--accent); font-weight: 600; text-decoration: none; font-size: 13px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ghost { border: 1px solid var(--line); background: var(--bg); border-radius: 9px; padding: 8px 12px; font-weight: 600; font-size: 13px; }
+
+  /* add tab */
+  .swapbar { display: flex; gap: 10px; align-items: center; justify-content: space-between; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+  .swapbar button { border: 0; background: transparent; color: var(--accent); font-weight: 600; }
+  form.search { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  form.search input, form.search select, .own input, .own select, #rename input { border: 1px solid var(--line); background: var(--bg); border-radius: 9px; padding: 8px 10px; min-width: 0; }
+  form.search select { grid-column: 1 / -1; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips button { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 4px 10px; font-size: 12.5px; }
+  .results { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .res { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+  .res img { width: 72px; height: 72px; object-fit: contain; background: #fff; border-radius: 6px; }
+  .res-body { min-width: 0; display: grid; gap: 2px; align-content: start; }
+  .res-side { display: grid; gap: 6px; justify-items: end; }
+  .res .primary { padding: 6px 12px; font-size: 13px; }
+  .badge { justify-self: start; font-size: 11.5px; font-weight: 600; padding: 2px 7px; border-radius: 999px; margin-top: 2px; }
+  .badge.ok { background: var(--good-soft); color: var(--good); }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  details.own { border-top: 1.5px solid var(--ink); padding-top: 10px; }
+  details.own summary { font-family: var(--font-display); font-stretch: 85%; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer; }
+  .own form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+  .own label { display: grid; gap: 3px; font-size: 12px; color: var(--muted); }
+  .own .wide { grid-column: 1 / -1; }
+
+  /* layouts tab */
+  .layouts { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .layouts button { width: 100%; text-align: left; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 9px 12px; }
+  .layouts li.on button { border-color: var(--accent); background: var(--accent-soft); }
+  section h4 { margin: 0 0 8px; font-family: var(--font-display); font-stretch: 85%; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; font-size: 14px; }
+  .keys { margin: 0; padding-left: 18px; display: grid; gap: 3px; color: var(--muted); font-size: 13px; }
+  kbd { font-family: var(--font-mono); font-size: 11.5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--bg); color: var(--ink); }
+  .file { position: relative; overflow: hidden; }
+  .file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .foot { color: var(--muted); font-size: 12px; margin: 0; }
+  .foot a { color: var(--accent); }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: 56% minmax(0, 1fr); }
+    .panel { border-left: 0; border-top: 1px solid var(--line); }
+    .tabs { padding-top: 6px; }
+    .brand h1 { font-size: 28px; }
+    .card { bottom: 12px; max-height: calc(100% - 100px); }
+    .hint { display: none; }
+    .seg button, .tog { padding: 6px 8px; font-size: 12.5px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="stage" id="stage" aria-label="3D model of the apartment">
+    <div class="labels" id="labels"></div>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="View">
+        <button id="v-orbit" aria-pressed="true">3D</button>
+        <button id="v-top" aria-pressed="false">Plan</button>
+        <button id="v-walk" aria-pressed="false">Walk</button>
+      </div>
+      <button class="tog" id="t-cut" aria-pressed="true">Cutaway</button>
+      <button class="tog" id="t-zones" aria-pressed="false">Clearances</button>
+      <button class="tog" id="t-labels" aria-pressed="true">Labels</button>
+      <div class="seg" role="group" aria-label="History">
+        <button id="t-undo" disabled aria-label="Undo">↶</button>
+        <button id="t-redo" disabled aria-label="Redo">↷</button>
+      </div>
+      <button class="tog" id="t-reset" aria-pressed="false">Reset view</button>
+    </div>
+    <div class="hint" id="hint">Drag furniture to move it · drag empty space to orbit · R rotates · Delete removes · Ctrl+Z undoes</div>
+    <div class="card" id="card" hidden></div>
+    <div class="pad" id="pad" hidden>
+      <button class="up" data-k="f" aria-label="Walk forward">▲</button>
+      <button class="lt" data-k="l" aria-label="Turn left">◀</button>
+      <button class="dn" data-k="b" aria-label="Walk back">▼</button>
+      <button class="rt" data-k="r" aria-label="Turn right">▶</button>
+    </div>
+  </section>
+
+  <aside class="panel" id="panel">
+    <nav class="tabs" role="tablist" aria-label="Panels">
+      <button role="tab" id="tab-list" aria-selected="true" aria-controls="pane-list">Shopping list</button>
+      <button role="tab" id="tab-add" aria-selected="false" aria-controls="pane-add">Add furniture</button>
+      <button role="tab" id="tab-layouts" aria-selected="false" aria-controls="pane-layouts">Layouts</button>
+    </nav>
+
+    <div class="panel-in" id="pane-list" role="tabpanel" aria-labelledby="tab-list">
+      <header class="brand"><h1>Casa AMS</h1><span id="layout-name"></span></header>
+      <div class="block" aria-label="Budget">
+        <div><label class="lbl" for="budget">Budget €</label><input id="budget" type="number" min="0" step="50"></div>
+        <div><span class="lbl">Plan total</span><span class="num" id="b-total">–</span></div>
+        <div><span class="lbl">Left</span><span class="num" id="b-left">–</span></div>
+        <div class="meter">
+          <div class="bar" id="b-bar"><i></i></div>
+          <small>Live IKEA.nl prices. Delivery and assembly are extra. Things you already own aren't counted.</small>
+        </div>
+      </div>
+      <section id="fit" aria-live="polite"></section>
+      <div id="rooms"></div>
+      <div class="row">
+        <button class="ghost" id="copy-list">Copy shopping list</button>
+        <button class="ghost" id="refresh">Refresh prices</button>
+      </div>
+    </div>
+
+    <div class="panel-in" id="pane-add" role="tabpanel" aria-labelledby="tab-add" hidden>
+      <div class="swapbar" id="swapbar" hidden><span></span><button type="button">Cancel</button></div>
+      <form class="search" id="search" role="search">
+        <input id="q" type="search" placeholder="Search IKEA.nl, e.g. KIVIK or desk 140" aria-label="Search IKEA.nl" autocomplete="off">
+        <button class="primary" type="submit">Search</button>
+        <select id="sort" aria-label="Sort results">
+          <option value="">Most relevant</option>
+          <option value="PRICE_LOW_TO_HIGH">Price: low to high</option>
+          <option value="PRICE_HIGH_TO_LOW">Price: high to low</option>
+          <option value="RATING">Best rated</option>
+          <option value="NEWEST">Newest</option>
+        </select>
+      </form>
+      <div class="chips" id="chips"></div>
+      <ul class="results" id="results"></ul>
+      <button class="ghost" id="more" hidden>Show more</button>
+      <details class="own">
+        <summary>Add something you already own</summary>
+        <form id="own">
+          <label class="wide">Name <input name="name" required maxlength="60" placeholder="e.g. Bike, piano, plant"></label>
+          <label>Width cm <input name="w" type="number" min="1" max="900" value="60" required></label>
+          <label>Depth cm <input name="d" type="number" min="1" max="900" value="60" required></label>
+          <label>Height cm <input name="h" type="number" min="1" max="260" value="100" required></label>
+          <label>Shape <select name="shape">
+            <option value="box">Box</option><option value="table">Table</option><option value="chair">Chair</option><option value="sofa">Sofa</option>
+            <option value="bed">Bed</option><option value="shelf">Shelf</option><option value="cabinet">Cabinet</option><option value="plant">Plant</option><option value="tv">TV</option>
+          </select></label>
+          <label>Colour <input name="color" type="color" value="#8d9198"></label>
+          <button class="primary" type="submit">Add</button>
+        </form>
+      </details>
+    </div>
+
+    <div class="panel-in" id="pane-layouts" role="tabpanel" aria-labelledby="tab-layouts" hidden>
+      <section>
+        <h4>Your layouts</h4>
+        <ul class="layouts" id="layouts"></ul>
+        <form id="rename" class="row" hidden style="margin-top:8px"><input id="rename-input" maxlength="60" aria-label="Layout name"><button class="primary" type="submit">Save name</button></form>
+        <div class="row" style="margin-top:10px">
+          <button class="ghost" id="l-dup">Duplicate</button>
+          <button class="ghost" id="l-rename">Rename</button>
+          <button class="ghost" id="l-del">Delete</button>
+          <button class="ghost" id="l-new">New from suggested plan</button>
+          <button class="ghost" id="l-empty">New empty flat</button>
+        </div>
+      </section>
+      <section>
+        <h4>Share and back up</h4>
+        <p class="muted">Layouts are saved in this browser. To work on one together, copy a link and send it: it opens as a new copy for the other person.</p>
+        <div class="row" style="margin-top:10px">
+          <button class="primary" id="l-share">Copy share link</button>
+          <button class="ghost" id="l-export">Download file</button>
+          <span class="ghost file">Open file<input id="l-import" type="file" accept="application/json,.json" aria-label="Open a layout file"></span>
+        </div>
+      </section>
+      <section>
+        <h4>Keys</h4>
+        <ul class="keys">
+          <li>Drag a piece to move it. It snaps flush against walls and furniture closer than 4 cm.</li>
+          <li><kbd>R</kbd> rotates 90°, <kbd>Shift</kbd>+<kbd>R</kbd> the other way</li>
+          <li>Arrow keys nudge 1 cm, with <kbd>Shift</kbd> 10 cm</li>
+          <li><kbd>Delete</kbd> removes, <kbd>Ctrl</kbd>+<kbd>D</kbd> duplicates, <kbd>Esc</kbd> deselects</li>
+          <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> undo, <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> redo</li>
+          <li>Walk: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows, drag to look</li>
+        </ul>
+      </section>
+      <p class="foot">Room sizes come from the floor plan. Where it gives no number, sizes are scaled from the drawing (about ±5 cm); the ceiling is assumed 2.60 m. Furniture is drawn as simplified shapes at real size. Built with <a href="https://github.com/mrdoob/three.js" target="_blank" rel="noopener">three.js</a>. Not affiliated with IKEA.</p>
+    </div>
+  </aside>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

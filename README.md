@@ -33,7 +33,7 @@ Products not in `dims.json` get their size from the search result or a typical s
 ## Tests
 
 ```bash
-node tests/fit.test.mjs
+node tests/fit.test.mjs && node tests/ikea.test.mjs
 ```
 
 Not affiliated with IKEA. Uses the public search behind ikea.com/nl.
