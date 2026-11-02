@@ -6,6 +6,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildApartment, ROOMS, DOORS, BOUNDS } from './apartment.js';
 import { buildShape, HUNG, bedTop } from './shapes.js';
 import { checkLayout, gaps, corners, clearanceZones, solid, roomOf, aabb, parts, localParts, DECOR } from './fit.js';
+import { startLive } from './live.js';
 import { search, byItemNo, toItem, variantProduct, articleNo, thumb, uid, sizeOf, classify, shapeParams, translate } from './ikea.js';
 
 const $ = s => document.querySelector(s);
@@ -795,6 +796,7 @@ function changed() {
   if (!$('#pane-layouts').hidden) renderLayouts();
   $('#t-undo').disabled = !undoStack.length; $('#t-redo').disabled = !redoStack.length;
   if (mode === 'walk') walkObstacles();
+  live?.();
 }
 
 // ---------- loop ----------
@@ -812,6 +814,10 @@ resize();
 
 // ?debug exposes the scene for automated screenshots (tests only)
 if (new URLSearchParams(location.search).has('debug')) window.casa = { THREE, renderer, scene, camera, controls, resize, items, get, renderAll, renderItem, runChecks, select, changed, labelRenderer, apt, furniture, applyVisibility, drawOverlay, checkLayout: () => checkLayout(items(), { walls: apt.walls, doors: DOORS, rooms: ROOMS }) };
+
+// ?live keeps an open Unreal level in step (tools/unreal/live_bridge.py)
+const live = new URLSearchParams(location.search).has('live')
+  ? startLive(() => items().filter(it => views.has(it.uid)).map(it => ({ it, ...views.get(it.uid) })), $('.toolbar')) : null;
 
 const clock = new THREE.Clock();
 function frame() {
