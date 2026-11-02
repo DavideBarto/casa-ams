@@ -7,15 +7,16 @@ here and goes on to the editor through Python Remote Execution (tick Enable Remo
 Python settings). casa_live.bat starts the editor, this and the planner in one go.
 """
 import json
+import math
 import os
 import re
 import sys
 import tempfile
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-sys.path.append(r'C:\Program Files\Epic Games\UE_5.8\Engine\Plugins\Experimental\PythonScriptPlugin\Content\Python')
-import remote_execution as rx
+from remote import rx             # the engine's remote_execution module
 
 PORT = 8766
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -32,13 +33,22 @@ pending = None                    # the newest layout Unreal hasn't had yet
 wake = threading.Condition()
 
 
+def num(value):
+    n = float(value)
+    if not math.isfinite(n):
+        raise ValueError(value)
+    return n
+
+
 def clean(job):
     """Only numbers, short names and known keys reach Unreal."""
     def item(i):
         light = i.get('light')
+        if light is not None and len(light) != 3:
+            raise ValueError(light)
         return {'uid': str(i['uid'])[:40], 'name': str(i['name'])[:80], 'key': KEY.fullmatch(i['key'])[0],
-                'x': float(i['x']), 'y': float(i['y']), 'rot': float(i.get('rot') or 0),
-                'light': [float(c) for c in light][:3] if light else None}
+                'x': num(i['x']), 'y': num(i['y']), 'rot': num(i.get('rot') or 0),
+                'light': [num(c) for c in light] if light else None}
     return {'v': int(job['v']), 'items': [item(i) for i in job['items'][:300]]}
 
 
@@ -77,7 +87,7 @@ class Handler(BaseHTTPRequestHandler):
         if not self.allowed():
             return
         size = int(self.headers.get('Content-Length') or 0)
-        if size > 64 << 20:
+        if not 0 <= size <= 64 << 20:
             return self.send_error(413)
         body = self.rfile.read(size)
         mesh = re.fullmatch(r'/mesh/([0-9a-f]{16})', self.path)
@@ -91,7 +101,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_error(404)
         try:
             job = clean(json.loads(body))
-        except (ValueError, KeyError, TypeError):
+        except (ValueError, KeyError, TypeError, AttributeError):
             return self.send_error(400)
         missing = sorted({i['key'] for i in job['items'] if not os.path.exists(os.path.join(CACHE, i['key'] + '.glb'))})
         if missing:
@@ -118,14 +128,15 @@ def run(rex, node, code):
 
 
 def worker():
-    """One change at a time; changes made meanwhile collapse into the newest layout. Saves after 2 s without changes."""
+    """One change at a time; changes made meanwhile collapse into the newest layout. Saves 10 s after the last change."""
     global pending
     rex = rx.RemoteExecution()
     rex.start()
-    last, last_node, unsaved = None, None, False
+    last, last_node, unsaved, save_at = None, None, False, 0
     while True:
         with wake:
-            wake.wait(timeout=2)
+            if pending is None:                       # a change may have come in during the last sync
+                wake.wait(timeout=2)
             job, nodes = pending, rex.remote_nodes
             state['unreal'] = bool(nodes)
             if not nodes:
@@ -142,8 +153,10 @@ def worker():
                 state.update(done=job['v'], note=note, error=error)
                 print(f"v{job['v']}: {error or note}", flush=True)
                 last, last_node, unsaved = job, node, True
-            elif unsaved:
+                save_at = time.monotonic() + 10       # once you stop arranging for a while
+            elif unsaved and time.monotonic() > save_at:
                 unsaved = run(rex, node, 'casa_live.save()')[0] != 'saved'
+                save_at = time.monotonic() + 30       # in Play, or it failed: try again later
         except Exception as e:                        # the editor closed or is busy: try again in a moment
             state['error'] = f'Unreal did not answer ({e})'
             print(state['error'], flush=True)

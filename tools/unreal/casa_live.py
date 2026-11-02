@@ -3,6 +3,7 @@
 Each piece of furniture is one mesh, imported once per shape into /Game/CasaAMS/Live and placed as an actor labelled
 "Casa Live ..." (tag CasaLive). The first sync replaces the furniture that came in with the flat's .glb.
 """
+# ponytail: shapes no longer in the plan stay in /Game/CasaAMS/Live; delete that folder in the Content Browser to tidy up.
 import json
 import os
 
@@ -50,6 +51,8 @@ def sync(cache):
     world = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world()
     if not world.get_path_name().startswith(casa.LEVEL + '.'):
         raise RuntimeError('open the CasaAMS level (Content Browser › CasaAMS) to see the planner live')
+    # you work in the planner, so Unreal is in the background: keep it drawing at full speed (Editor Preferences › Performance)
+    unreal.find_object(None, '/Script/UnrealEd.Default__EditorPerformanceSettings').set_editor_property('bThrottleCPUWhenNotForeground', False)
     with open(os.path.join(cache, 'layout.json'), encoding='utf-8') as f:
         items = json.load(f)['items']
     drop_imported_furniture()
@@ -57,15 +60,23 @@ def sync(cache):
             if isinstance(a, unreal.StaticMeshActor) and len(a.tags) > 1 and a.tags[0] == TAG}
     new = 0
     for it in items:
-        mesh, imported = live_mesh(it['key'], cache)
-        new += imported
         a = have.pop(it['uid'], None)
+        comp = a and a.static_mesh_component
+        if comp and comp.static_mesh and comp.static_mesh.get_path_name().startswith(f"{LIVE}/{it['key']}/"):
+            mesh = comp.static_mesh                    # same shape as last time
+        else:
+            mesh, imported = live_mesh(it['key'], cache)
+            new += imported
         if a is None:
             a = casa.spawn(unreal.StaticMeshActor, '')
             a.set_editor_property('tags', [TAG, unreal.Name(it['uid'])])
-        a.set_actor_label(f"Casa Live {it['name']}")
+        label = f"Casa Live {it['name']}"
+        if a.get_actor_label() != label:
+            a.set_actor_label(label)
         # the planner's x and y (mm) are Unreal's X and Y; its turn goes the other way round
-        a.set_actor_location_and_rotation(unreal.Vector(it['x'] / 10, it['y'] / 10, 0), unreal.Rotator(yaw=-it['rot']), False, False)
+        at, turn = unreal.Vector(it['x'] / 10, it['y'] / 10, 0), unreal.Rotator(yaw=-it['rot'])
+        if not (a.get_actor_location().is_near_equal(at, 0.01) and a.get_actor_rotation().is_near_equal(turn, 0.01)):
+            a.set_actor_location_and_rotation(at, turn, False, False)
         comp = a.static_mesh_component
         if comp.static_mesh != mesh:
             comp.set_static_mesh(mesh)
