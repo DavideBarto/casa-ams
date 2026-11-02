@@ -295,18 +295,29 @@ def add_context(site, north, radius, cache):
                                     verts.append(local(*xyz(i)))
                                 face.append(ids[i])
                             faces.append(face)
-                            ring = [verts[k] for k in face]
-                            if mine and max(p[2] for p in ring) - min(p[2] for p in ring) < 0.01 and inside(0, 0, [p[:2] for p in ring]):
-                                roofs.append(ring)      # a flat roof over the flat: the outline of its tower
+                            if mine:
+                                ring = [verts[k] for k in face]
+                                if max(p[2] for p in ring) - min(p[2] for p in ring) < 0.25 and ring[0][2] > 0:   # 3D BAG roofs vary by cm
+                                    roofs.append([p[:2] for p in ring])     # a flat roof above the flat's floor
     building = flat_mat('context-building', (0.5, 0.48, 0.45), 0.85)
     mesh_object('Context buildings', *town, building, coll)
     if own[1]:
         tower = mesh_object('Context own building', *own, building, coll)
         bm = bmesh.new()
         bm.from_mesh(tower.data)
-        # one building can hold several towers on a shared podium: remove only the one above the flat
-        outline = [p[:2] for p in max(roofs, key=lambda r: r[0][2])] if roofs else None
-        ours = lambda co: outline is None or near(co.x, co.y, outline, 1.0)
+        # one building can hold several towers on a shared podium: remove only the flat's own tower, i.e. the roofs above
+        # the flat's floor that cover it or touch one that does (setbacks, plant rooms); other towers don't touch
+        region = [r for r in roofs if inside(0, 0, r)]
+        grown = True
+        while grown:
+            grown = False
+            for r in roofs:
+                if r not in region and any(near(x, y, q, 1.0) for x, y in r for q in region):
+                    region.append(r)
+                    grown = True
+        ours = lambda co: not region or any(near(co.x, co.y, r, 1.0) for r in region)
+        print(f'[casa] own tower: {len(region)} roofs above the flat, cut below the flat' if region
+              else '[casa] no flat roof over the flat: cutting its whole building below the flat')
         cut = bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, -0.35), plane_no=(0, 0, 1))
         bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.calc_center_median().z > -0.35 and ours(f.calc_center_median())], context='FACES')
         bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context='VERTS')
