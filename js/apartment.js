@@ -50,7 +50,7 @@ export function buildApartment(scene) {
   const wallMat = named('wall', '#f3f2ef'), poche = named('wall-top', '#2a2d33');   // section-cut colour, like the black walls on the drawing
   const wallMats = [wallMat, wallMat, poche, wallMat, wallMat, wallMat];
   const glassMat = new THREE.MeshStandardMaterial({ name: 'glass', color: 0xa9c7d8, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0.1, depthWrite: false });
-  const frameMat = named('frame', '#3b3f45'), fixture = named('ceramic', '#ffffff', { roughness: 0.35 }), grey = named('appliance', '#b9bdc2');
+  const frameMat = named('frame', '#4a4039'), fixture = named('ceramic', '#ffffff', { roughness: 0.35 }), grey = named('appliance', '#b9bdc2');
   const steel = named('steel', '#c9cdd1', { metalness: 0.6, roughness: 0.3 });
 
   function slab(x1, y1, x2, y2, z1, z2, mat, { cut = true, solid = false, shadow = true, isWall = false } = {}) {
@@ -77,21 +77,24 @@ export function buildApartment(scene) {
     group.add(mesh);
   }
   const wood = canvasTex(x => {
-    const tones = ['#caa77a', '#c49f71', '#cfae83', '#c7a375', '#d2b289'];
+    const tones = ['#a8703f', '#9f6838', '#b07843', '#a46c3b', '#b47d48'];   // warm oak, as in the videos
     for (let r = 0; r < 8; r++) {
       const off = (r * 173) % 256;
       for (let i = -1; i < 3; i++) {
         x.fillStyle = tones[(r * 3 + i + 5) % tones.length]; x.fillRect(off + i * 256, r * 64, 256, 64);
-        x.strokeStyle = 'rgba(80,55,30,0.28)'; x.lineWidth = 2; x.strokeRect(off + i * 256 + 1, r * 64 + 1, 256, 64);
+        x.strokeStyle = 'rgba(60,35,15,0.3)'; x.lineWidth = 2; x.strokeRect(off + i * 256 + 1, r * 64 + 1, 256, 64);
       }
     }
   });
   const deck = canvasTex((x, s) => {
-    for (let i = 0; i < 8; i++) { x.fillStyle = i % 2 ? '#9a8a76' : '#a39380'; x.fillRect(i * 64, 0, 64, s); x.fillStyle = 'rgba(40,30,20,0.35)'; x.fillRect(i * 64, 0, 3, s); }
+    // light grey composite boards
+    for (let i = 0; i < 8; i++) { x.fillStyle = i % 2 ? '#aaa69e' : '#b4b0a8'; x.fillRect(i * 64, 0, 64, s); x.fillStyle = 'rgba(40,40,40,0.35)'; x.fillRect(i * 64, 0, 3, s); }
   });
   const tile = canvasTex((x, s) => {
-    x.fillStyle = '#e3e6e8'; x.fillRect(0, 0, s, s); x.strokeStyle = '#c4c9cd'; x.lineWidth = 3;
-    for (let i = 0; i <= 4; i++) { x.beginPath(); x.moveTo(i * 128, 0); x.lineTo(i * 128, s); x.moveTo(0, i * 128); x.lineTo(s, i * 128); x.stroke(); }
+    // grey-beige 60 x 30 cm tiles (the texture repeats every 1.2 m)
+    x.fillStyle = '#cbbfae'; x.fillRect(0, 0, s, s); x.strokeStyle = '#b3a693'; x.lineWidth = 3;
+    for (let i = 0; i <= 4; i++) { x.beginPath(); x.moveTo(0, i * 128); x.lineTo(s, i * 128); x.stroke(); }
+    for (let i = 0; i <= 2; i++) { x.beginPath(); x.moveTo(i * 256, 0); x.lineTo(i * 256, s); x.stroke(); }
   });
   floor(-210, -2090, 9450, 6490, wood, 1.44, 0, 'floor-wood');
   floor(7470, 2350, 8835, 6150, tile, 1.2, 2, 'floor-tile');
@@ -135,7 +138,7 @@ export function buildApartment(scene) {
   slab(7330, 3580, 7366, 4665, 0, 2150, M('#e9e4da')); slab(7340, 3550, 7368, 5750, 2160, 2200, frameMat);   // bathroom sliding door
 
   // kitchen (comes with the flat)
-  const front = named('kitchen-front', '#e2e0da');
+  const front = named('kitchen-front', '#ecebe8');
   slab(3670, 2200, 4270, 2800, 0, 2200, front, { solid: true });
   slab(3670, 2800, 4270, 5750, 0, 870, front, { solid: true });
   slab(3650, 2800, 4270, 5750, 870, 910, M('#45484e'), { cut: false });
@@ -145,7 +148,10 @@ export function buildApartment(scene) {
     ring.rotation.x = -Math.PI / 2; ring.position.set(m(x), m(916), m(y)); group.add(ring);
   }
   slab(3740, 4700, 4200, 5100, 905, 912, steel, { cut: false }); slab(4180, 4880, 4220, 4920, 912, 1180, steel, { cut: false });
-  slab(3770, 3460, 4270, 3860, 1650, 1800, M('#cfd2d6', { metalness: 0.4 })); slab(4060, 3560, 4270, 3760, 1800, H, M('#cfd2d6', { metalness: 0.4 }));
+  // dark grey splashback, upper cabinets and a slim hood under them over the hob
+  slab(4250, 2800, 4270, 5750, 910, 1450, M('#3e4247'));
+  slab(3920, 2800, 4270, 3460, 1450, 2200, front); slab(3920, 3460, 4270, 3860, 1520, 2200, front); slab(3920, 3860, 4270, 5750, 1450, 2200, front);
+  slab(3920, 3460, 4270, 3860, 1450, 1520, M('#cfd2d6', { metalness: 0.4 }));
 
   // bathroom, toilet, washer + dryer (appliances not included)
   slab(7470, 2350, 8490, 3450, 0, 40, M('#d4d8db'), { cut: false }); glass(7470, 3430, 8290, 3450, 40, 2000);

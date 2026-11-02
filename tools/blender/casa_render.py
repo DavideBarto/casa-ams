@@ -58,8 +58,8 @@ VIEWS = {
 }
 # sun elevation°, azimuth° (from north, clockwise), sun strength, sky strength, lamps on, exposure
 TIMES = {
-    'morning': (16, 95, 30, 0.4, False, -1.5),
-    'afternoon': (42, 200, 30, 0.4, False, -1.5),
+    'morning': (16, 95, 30, 0.4, False, 0.0),
+    'afternoon': (42, 200, 30, 0.4, False, 0.0),
     'sunset': (3, 285, 12, 0.35, True, -0.5),
     'night': (-15, 300, 0.0, 0.02, True, 0.0),
 }
@@ -165,7 +165,13 @@ def upgrade_materials(out_dir):
             for link in list(b.inputs['Base Color'].links):
                 nt.links.remove(link)
             diff = world_mapped_image(nt, floor['diff'], 1.2, 'sRGB')
-            nt.links.new(diff.outputs['Color'], b.inputs['Base Color'])
+            tint = nt.nodes.new('ShaderNodeMix')     # the flat's oak is warmer and darker than the Poly Haven laminate
+            tint.data_type, tint.blend_type = 'RGBA', 'MULTIPLY'
+            tint.inputs['Factor'].default_value = 1.0
+            colour = lambda sockets, name: next(x for x in sockets if x.type == 'RGBA' and (name is None or x.name == name))
+            colour(tint.inputs, 'B').default_value = (0.82, 0.6, 0.42, 1)
+            nt.links.new(diff.outputs['Color'], colour(tint.inputs, 'A'))
+            nt.links.new(colour(tint.outputs, None), b.inputs['Base Color'])
             if 'rough' in floor:
                 rough = world_mapped_image(nt, floor['rough'], 1.2, 'Non-Color')
                 nt.links.new(rough.outputs['Color'], b.inputs['Roughness'])
@@ -258,8 +264,8 @@ def flat_mat(name, color, roughness, **inputs):
 
 def add_context(site, north, radius, cache):
     """The real city around the flat: every building from the 3D BAG (TU Delft, CC BY 4.0) with its real roof shape,
-    and the water from the BGT (Dutch large-scale topography, CC0). The flat's own tower is cut off below the flat;
-    other towers of the same building stay whole."""
+    and the water from the BGT (Dutch large-scale topography, CC0). Only the flat's own floor is cut out of its tower: the
+    floors above stay as its ceiling ('Context own floors above'), other towers of the same building stay whole."""
     try:
         e0, n0, z0 = (float(v) for v in site.split(','))
     except ValueError:
@@ -302,9 +308,6 @@ def add_context(site, north, radius, cache):
     building = flat_mat('context-building', (0.5, 0.48, 0.45), 0.85)
     mesh_object('Context buildings', *town, building, coll)
     if own[1]:
-        tower = mesh_object('Context own building', *own, building, coll)
-        bm = bmesh.new()
-        bm.from_mesh(tower.data)
         # one building can hold several towers on a shared podium: remove only the flat's own tower, i.e. the roofs above
         # the flat's floor that cover it or touch one that does (setbacks, plant rooms); other towers don't touch
         region = [r for r in roofs if inside(0, 0, r)]
@@ -316,15 +319,30 @@ def add_context(site, north, radius, cache):
                     region.append(r)
                     grown = True
         ours = lambda co: not region or any(near(co.x, co.y, r, 1.0) for r in region)
-        print(f'[casa] own tower: {len(region)} roofs above the flat, cut below the flat' if region
+        print(f'[casa] own tower: {len(region)} roofs above the flat; its floor is cut out, the floors above kept' if region
               else '[casa] no flat roof over the flat: cutting its whole building below the flat')
-        cut = bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, -0.35), plane_no=(0, 0, 1))
-        bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.calc_center_median().z > -0.35 and ours(f.calc_center_median())], context='FACES')
-        bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context='VERTS')
-        bmesh.ops.holes_fill(bm, edges=[e for e in cut['geom_cut'] if isinstance(e, bmesh.types.BMEdge) and e.is_valid and e.is_boundary
-                                        and ours((e.verts[0].co + e.verts[1].co) / 2)], sides=0)
-        bm.to_mesh(tower.data)
-        bm.free()
+
+        def part(name, z, drop, cap=None):
+            """The own building cut at height z, without the faces drop() picks; the cut is closed, in cap's material if given."""
+            obj = mesh_object(name, *own, building, coll)
+            bm = bmesh.new()
+            bm.from_mesh(obj.data)
+            edges = bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, z), plane_no=(0, 0, 1))['geom_cut']
+            bmesh.ops.delete(bm, geom=[f for f in bm.faces if drop(f.calc_center_median())], context='FACES')
+            bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context='VERTS')
+            filled = bmesh.ops.holes_fill(bm, edges=[e for e in edges if isinstance(e, bmesh.types.BMEdge) and e.is_valid and e.is_boundary
+                                                     and ours((e.verts[0].co + e.verts[1].co) / 2)], sides=0)
+            if cap:
+                obj.data.materials.append(cap)
+                for f in filled['faces']:
+                    f.material_index = 1
+            bm.to_mesh(obj.data)
+            bm.free()
+
+        part('Context own building', -0.35, lambda c: c.z > -0.35 and ours(c))
+        if region:   # the floors above stay: they are the flat's and the loggia's ceiling, and they shade them
+            top = CEILING_H / 1000
+            part('Context own floors above', top, lambda c: not (c.z > top and ours(c)), flat_mat('ceiling-underside', (0.85, 0.85, 0.83), 0.9))
 
     ground_z = 1.0 - z0    # Amsterdam's streets are about 1 m above NAP; water drawn just above them
     water_v, water_f = [], []
@@ -509,6 +527,10 @@ def main():
         try:
             coll = add_context(args.site, args.north, args.radius, os.path.join(out, 'context-cache'))
             export_context(coll, os.path.join(os.path.dirname(os.path.abspath(args.glb)), 'casa-context.glb'))
+            above = bpy.data.objects.get('Context own floors above')
+            if above:    # its underside is the ceiling now; hidden for the overview like the plain ceiling
+                bpy.data.objects.remove(ceiling)
+                ceiling = above
         except (OSError, ValueError) as e:   # 3D BAG / PDOK unreachable or not JSON: render the flat on its own
             print(f'[casa] no surroundings ({e})')
     setup_render(args.samples, args.res)
