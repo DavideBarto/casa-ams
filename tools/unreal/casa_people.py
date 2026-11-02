@@ -17,8 +17,12 @@ import argparse
 import sys
 
 import unreal
-from editor_toolset.toolsets import blueprint_dsl
-from editor_toolset.toolsets.blueprint import BlueprintTools as B
+
+try:
+    from editor_toolset.toolsets import blueprint_dsl
+    from editor_toolset.toolsets.blueprint import BlueprintTools as B
+except ImportError:
+    raise SystemExit('casa_people.py needs the "All Toolsets" plugin: enable it in Edit > Plugins and restart the editor')
 
 FOLDER = '/Game/CasaAMS/People'
 LEVEL = '/Game/CasaAMS/CasaAMS'
@@ -134,7 +138,7 @@ def place(person, heights, looks):
         if i == 0:
             a.set_editor_property('auto_possess_player', unreal.AutoReceiveInput.PLAYER0)
         if i < len(looks):              # a MetaHuman on the mannequin; WearLookAlike makes it follow at Play
-            mh = actors.spawn_actor_from_class(unreal.load_asset(looks[i]).generated_class(), a.get_actor_location())
+            mh = actors.spawn_actor_from_class(looks[i], a.get_actor_location())
             mh.set_actor_label(f'Casa Person {i + 1} look')
             snap = unreal.AttachmentRule.SNAP_TO_TARGET
             mh.attach_to_component(a.get_editor_property('mesh'), '', snap, snap, snap, False)
@@ -146,6 +150,10 @@ def main():
     p.add_argument('--looks', default='', help='MetaHuman Blueprints to wear, comma-separated (built at 1.80 m, the mannequin height)')
     a = p.parse_args(sys.argv[1:])
     heights, looks = [float(h) for h in a.heights.split(',')][:2], [l for l in a.looks.split(',') if l]
+    found = [unreal.load_asset(path) for path in looks]       # before anything changes: a typo must not leave a half-built level
+    if None in found:
+        raise SystemExit(f'--looks: no Blueprint at {looks[found.index(None)]}')
+    looks = [bp.generated_class() for bp in found]
     editor = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
     if not editor.get_editor_world().get_path_name().startswith(LEVEL + '.'):
         unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).load_level(LEVEL)
@@ -162,7 +170,8 @@ def main():
     place(person.generated_class(), heights, looks)
 
     unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level()
-    unreal.EditorAssetLibrary.save_directory(FOLDER, only_if_is_dirty=False)
+    for bp in (person, mode):       # only what this script changed, not the MetaHumans unpacked in the same folder
+        unreal.EditorAssetLibrary.save_loaded_asset(bp, only_if_is_dirty=False)
     log(f'two people placed ({", ".join(f"{h / 100:.2f} m" for h in heights)}): press Play, walk with W A S D, Tab to switch')
 
 
