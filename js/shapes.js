@@ -45,7 +45,8 @@ const cache = new Map();
 /** Plain painted material; also used by apartment.js. */
 export function M(color, o = {}) {
   const key = 'M' + color + JSON.stringify(o);
-  if (!cache.has(key)) cache.set(key, new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0, ...o }));
+  // names travel into the .glb export, so Blender/Unreal can tell materials apart ('light' = glowing lamp parts)
+  if (!cache.has(key)) cache.set(key, new THREE.MeshStandardMaterial({ name: o.emissive ? 'light' : 'paint', color, roughness: 0.6, metalness: 0, ...o }));
   return cache.get(key);
 }
 function mat(kind, color) {
@@ -60,7 +61,7 @@ function mat(kind, color) {
       gloss: { roughness: 0.12 },
       mirror: { metalness: 1, roughness: 0.04 },
     }[kind];
-    cache.set(key, new THREE.MeshStandardMaterial({ color, ...o }));
+    cache.set(key, new THREE.MeshStandardMaterial({ name: kind, color, ...o }));
   }
   return cache.get(key);
 }
@@ -422,7 +423,7 @@ const B = {
     R(g, 0, 0, Math.min(w * 0.3, 350), d * 0.8, 0, 14, mat('metal', '#2a2c30'), 6);
     P(g, 0, -10, 50, 30, 14, 70, mat('metal', '#2a2c30'));
     R(g, 0, 0, w, 30, 80, h - 80, mat('gloss', '#111214'), 6);
-    P(g, 0, 16, w - 16, 2, 88, h - 96, M('#0b0d12', { roughness: 0.08, emissive: '#0d1626', emissiveIntensity: 0.4 }));
+    P(g, 0, 16, w - 16, 2, 88, h - 96, M('#0b0d12', { name: 'screen', roughness: 0.08, emissive: '#0d1626', emissiveIntensity: 0.4 }));
   },
   diningset(g, it) {
     const { w, d, h } = it, n = chairCount(it);

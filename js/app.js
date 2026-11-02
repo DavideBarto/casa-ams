@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import CameraControls from 'camera-controls';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildApartment, ROOMS, DOORS, BOUNDS } from './apartment.js';
@@ -116,7 +117,7 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme
 new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 const apt = buildApartment(scene);
-const furniture = new THREE.Group(); scene.add(furniture);
+const furniture = new THREE.Group(); furniture.name = 'Furniture'; scene.add(furniture);
 const overlay = new THREE.Group(); scene.add(overlay);     // clearance zones + distance guides
 const views = new Map();                                    // uid -> { group, foot }
 
@@ -148,6 +149,8 @@ function renderItem(it) {
   }
   group.add(foot);
   group.traverse(o => { o.userData.uid = it.uid; });
+  group.name = `${it.name} ${it.type}`.trim();                       // shows up in Blender's and Unreal's outliner
+  Object.assign(group.userData, { itemNo: it.itemNo, price: it.price, url: it.url });   // exported as glTF extras
   furniture.add(group);
   views.set(it.uid, { group, foot });
   invalidate();
@@ -708,11 +711,25 @@ $('#l-share').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(url); toast('Link copied. Opening it loads this layout as a new copy.'); }
   catch { prompt('Copy this link:', url); }
 });
-$('#l-export').addEventListener('click', () => {
+function download(blob, ext) {
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(packable(), null, 1)], { type: 'application/json' }));
-  a.download = `casa-ams-${L().name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+  a.href = URL.createObjectURL(blob);
+  a.download = `casa-ams-${L().name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.${ext}`;
   a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$('#l-export').addEventListener('click', () => download(new Blob([JSON.stringify(packable(), null, 1)], { type: 'application/json' }), 'json'));
+// The whole flat as a .glb (metres, named pieces and materials) for Blender and Unreal.
+$('#l-glb').addEventListener('click', async () => {
+  const keep = walls;
+  walls = 'full'; applyVisibility();                              // real wall heights
+  for (const v of views.values()) { v.group.visible = true; v.foot.visible = false; }   // ceiling lamps and curtains too, no footprints
+  apt.swings.visible = false;
+  try {
+    const glb = await new GLTFExporter().parseAsync([apt.group, furniture], { binary: true, onlyVisible: true });
+    download(new Blob([glb], { type: 'model/gltf-binary' }), 'glb');
+    toast('3D model downloaded. Open it in Blender (File › Import › glTF) or drag it into Unreal.');
+  } catch { toast("Couldn't create the 3D file in this browser."); }
+  apt.swings.visible = true; walls = keep; select(selected);
 });
 $('#l-import').addEventListener('change', async e => {
   const file = e.target.files[0]; if (!file) return;

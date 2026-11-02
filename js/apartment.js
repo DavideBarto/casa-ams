@@ -41,14 +41,17 @@ function canvasTex(draw) {
 }
 
 export function buildApartment(scene) {
-  const group = new THREE.Group(); scene.add(group);
+  const group = new THREE.Group(); group.name = 'Apartment'; scene.add(group);
   const cutables = [];   // { mesh, z1, z2, wall }: shrink to 1 m when walls are low; walls lie flat when they're off
   const walls = [];      // plan rects that furniture and walkers can't pass
 
-  const wallMat = M('#f3f2ef'), poche = M('#2a2d33');       // section-cut colour, like the black walls on the drawing
+  // Own (uncached) materials with names for the .glb export, so renaming them can't touch furniture sharing a colour.
+  const named = (name, color, o = {}) => new THREE.MeshStandardMaterial({ name, color, roughness: 0.6, ...o });
+  const wallMat = named('wall', '#f3f2ef'), poche = named('wall-top', '#2a2d33');   // section-cut colour, like the black walls on the drawing
   const wallMats = [wallMat, wallMat, poche, wallMat, wallMat, wallMat];
-  const glassMat = new THREE.MeshStandardMaterial({ color: 0xa9c7d8, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0.1, depthWrite: false });
-  const frameMat = M('#3b3f45'), fixture = M('#ffffff', { roughness: 0.35 }), grey = M('#b9bdc2'), steel = M('#c9cdd1', { metalness: 0.6, roughness: 0.3 });
+  const glassMat = new THREE.MeshStandardMaterial({ name: 'glass', color: 0xa9c7d8, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0.1, depthWrite: false });
+  const frameMat = named('frame', '#3b3f45'), fixture = named('ceramic', '#ffffff', { roughness: 0.35 }), grey = named('appliance', '#b9bdc2');
+  const steel = named('steel', '#c9cdd1', { metalness: 0.6, roughness: 0.3 });
 
   function slab(x1, y1, x2, y2, z1, z2, mat, { cut = true, solid = false, shadow = true, isWall = false } = {}) {
     const h = m(z2 - z1), geo = new THREE.BoxGeometry(m(x2 - x1), h, m(y2 - y1));
@@ -66,9 +69,9 @@ export function buildApartment(scene) {
   const glass = (x1, y1, x2, y2, z1, z2, solid = false) => slab(x1, y1, x2, y2, z1, z2, glassMat, { solid, shadow: false, isWall: true });
   const post = (x1, y1, x2, y2, z1 = 0, z2 = H) => slab(x1, y1, x2, y2, z1, z2, frameMat, { isWall: true });
 
-  function floor(x1, y1, x2, y2, tex, rep, z = 0) {
+  function floor(x1, y1, x2, y2, tex, rep, z, name) {
     const t = tex.clone(); t.needsUpdate = true; t.repeat.set(m(x2 - x1) / rep, m(y2 - y1) / rep);
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(m(x2 - x1), m(y2 - y1)), new THREE.MeshStandardMaterial({ map: t, roughness: 0.85 }));
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(m(x2 - x1), m(y2 - y1)), new THREE.MeshStandardMaterial({ name, map: t, roughness: 0.85 }));
     mesh.rotation.x = -Math.PI / 2; mesh.position.set(m((x1 + x2) / 2), m(z), m((y1 + y2) / 2)); mesh.receiveShadow = true;
     mesh.userData.floor = true;
     group.add(mesh);
@@ -90,10 +93,10 @@ export function buildApartment(scene) {
     x.fillStyle = '#e3e6e8'; x.fillRect(0, 0, s, s); x.strokeStyle = '#c4c9cd'; x.lineWidth = 3;
     for (let i = 0; i <= 4; i++) { x.beginPath(); x.moveTo(i * 128, 0); x.lineTo(i * 128, s); x.moveTo(0, i * 128); x.lineTo(s, i * 128); x.stroke(); }
   });
-  floor(-100, -2165, 9290, 6350, wood, 1.44);
-  floor(7470, 2350, 8990, 6150, tile, 1.2, 2);
-  floor(6320, -1210, 7290, -100, tile, 1.2, 2);
-  floor(-2570, -160, -100, 6400, deck, 1.12, -40);
+  floor(-100, -2165, 9290, 6350, wood, 1.44, 0, 'floor-wood');
+  floor(7470, 2350, 8990, 6150, tile, 1.2, 2, 'floor-tile');
+  floor(6320, -1210, 7290, -100, tile, 1.2, 2, 'floor-tile');
+  floor(-2570, -160, -100, 6400, deck, 1.12, -40, 'deck');
 
   // exterior and party walls
   wall(-100, -300, 6220, 0); wall(6220, -2165, 6320, -300); wall(6220, -2165, 7950, -2065);
@@ -130,7 +133,7 @@ export function buildApartment(scene) {
   slab(7330, 3530, 7366, 4470, 0, 2150, M('#e9e4da')); slab(7340, 3500, 7368, 5400, 2160, 2200, frameMat);   // bathroom sliding door
 
   // kitchen (comes with the flat)
-  const front = M('#e2e0da');
+  const front = named('kitchen-front', '#e2e0da');
   slab(3670, 2200, 4270, 2800, 0, 2200, front, { solid: true });
   slab(3670, 2800, 4270, 5750, 0, 870, front, { solid: true });
   slab(3650, 2800, 4270, 5750, 870, 910, M('#45484e'), { cut: false });
@@ -145,7 +148,7 @@ export function buildApartment(scene) {
   // bathroom, toilet, washer + dryer (appliances not included)
   slab(7470, 2350, 8490, 3450, 0, 40, M('#d4d8db'), { cut: false }); glass(7470, 3430, 8290, 3450, 40, 2000);
   slab(8540, 3700, 8990, 4300, 820, 860, fixture); slab(8540, 4700, 8990, 5300, 820, 860, fixture);
-  for (const y of [3750, 4750]) slab(8970, y, 8988, y + 500, 1100, 1900, M('#c9d6df', { metalness: 0.5, roughness: 0.15 }));
+  for (const y of [3750, 4750]) slab(8970, y, 8988, y + 500, 1100, 1900, named('mirror', '#c9d6df', { metalness: 0.5, roughness: 0.15 }));
   slab(6620, -1210, 6990, -600, 0, 420, fixture, { cut: false }); slab(6620, -1210, 6990, -1050, 420, 900, fixture); slab(7110, -760, 7290, -460, 780, 860, fixture);
   slab(6420, 1300, 7020, 1900, 0, 850, grey, { cut: false }); slab(6420, 1300, 7020, 1900, 860, 1710, grey);
 
@@ -161,11 +164,12 @@ export function buildApartment(scene) {
 
   // door swings drawn on the floor, like the arcs on the drawing
   const lineMat = new THREE.LineBasicMaterial({ color: 0x3b3f45 });
+  const swings = new THREE.Group(); swings.name = 'Door swings'; group.add(swings);   // plan drawing only, left out of the 3D export
   for (const { hx, hy, r, a0, a1 } of DOORS) {
     const pts = [new THREE.Vector3(m(hx), 0.004, m(hy))];
     for (let i = 0; i <= 24; i++) { const a = (a0 + (a1 - a0) * i / 24) * Math.PI / 180; pts.push(new THREE.Vector3(m(hx + r * Math.cos(a)), 0.004, m(hy + r * Math.sin(a)))); }
     pts.push(pts[0].clone());
-    group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat));
+    swings.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat));
   }
 
   const labels = [...ROOMS.map(r => r.label), KITCHEN_LABEL].map(([name, sub, x, y]) => {
@@ -182,5 +186,5 @@ export function buildApartment(scene) {
       mesh.scale.y = mesh.visible ? (top - z1) / (z2 - z1) : 1;
     }
   }
-  return { group, walls, labels, setWalls };
+  return { group, walls, labels, swings, setWalls };
 }
