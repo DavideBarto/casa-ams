@@ -165,7 +165,13 @@ def upgrade_materials(out_dir):
             for link in list(b.inputs['Base Color'].links):
                 nt.links.remove(link)
             diff = world_mapped_image(nt, floor['diff'], 1.2, 'sRGB')
-            nt.links.new(diff.outputs['Color'], b.inputs['Base Color'])
+            tint = nt.nodes.new('ShaderNodeMix')     # the flat's oak is warmer and darker than the Poly Haven laminate
+            tint.data_type, tint.blend_type = 'RGBA', 'MULTIPLY'
+            tint.inputs['Factor'].default_value = 1.0
+            colour = lambda sockets, name: next(x for x in sockets if x.type == 'RGBA' and (name is None or x.name == name))
+            colour(tint.inputs, 'B').default_value = (0.82, 0.6, 0.42, 1)
+            nt.links.new(diff.outputs['Color'], colour(tint.inputs, 'A'))
+            nt.links.new(colour(tint.outputs, None), b.inputs['Base Color'])
             if 'rough' in floor:
                 rough = world_mapped_image(nt, floor['rough'], 1.2, 'Non-Color')
                 nt.links.new(rough.outputs['Color'], b.inputs['Roughness'])

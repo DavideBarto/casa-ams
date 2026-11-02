@@ -26,7 +26,7 @@ The Layouts tab has **Download 3D model (.glb)**: the whole flat with named piec
   and its height above NAP, plus `--radius 1000`. Every building around comes from the
   [3D BAG](https://3dbag.nl) (TU Delft, CC BY 4.0) with its real roof shape, the water from the
   [BGT](https://www.pdok.nl/introductie/-/article/basisregistratie-grootschalige-topografie-bgt-) (CC0); the flat's own
-  building is cut off just below the flat. It also writes `casa-context.glb` next to the flat's `.glb`, for Unreal.
+  floor is cut out of its building, and the floors above stay as its ceiling. It also writes `casa-context.glb` next to the flat's `.glb`, for Unreal.
   The origin is the drawing's (0, 0): the living room's corner by the balcony door. Find your building on
   [3dbag.nl](https://3dbag.nl/en/viewer), measure from its corner to that point, and use about 1 m + 3.2 m per floor
   for Z. Keep your own address out of git.

@@ -149,7 +149,7 @@ export function buildApartment(scene) {
   }
   slab(3740, 4700, 4200, 5100, 905, 912, steel, { cut: false }); slab(4180, 4880, 4220, 4920, 912, 1180, steel, { cut: false });
   // dark grey splashback, upper cabinets and a slim hood under them over the hob
-  slab(4250, 2800, 4270, 5750, 910, 1450, M('#3e4247'), { cut: false });
+  slab(4250, 2800, 4270, 5750, 910, 1450, M('#3e4247'));
   slab(3920, 2800, 4270, 3460, 1450, 2200, front); slab(3920, 3460, 4270, 3860, 1520, 2200, front); slab(3920, 3860, 4270, 5750, 1450, 2200, front);
   slab(3920, 3460, 4270, 3860, 1450, 1520, M('#cfd2d6', { metalness: 0.4 }));
 
