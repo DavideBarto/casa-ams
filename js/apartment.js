@@ -93,7 +93,7 @@ export function buildApartment(scene) {
     x.fillStyle = '#e3e6e8'; x.fillRect(0, 0, s, s); x.strokeStyle = '#c4c9cd'; x.lineWidth = 3;
     for (let i = 0; i <= 4; i++) { x.beginPath(); x.moveTo(i * 128, 0); x.lineTo(i * 128, s); x.moveTo(0, i * 128); x.lineTo(s, i * 128); x.stroke(); }
   });
-  floor(-210, -300, 9450, 6490, wood, 1.44, 0, 'floor-wood'); floor(5940, -2090, 9450, -300, wood, 1.44, 0, 'floor-wood');   // main body, north block
+  floor(-210, -2090, 9450, 6490, wood, 1.44, 0, 'floor-wood');
   floor(7470, 2350, 8835, 6150, tile, 1.2, 2, 'floor-tile');
   floor(6160, -1306, 7130, -100, tile, 1.2, 2, 'floor-tile');
   floor(-2700, -140, -210, 6420, deck, 1.12, -40, 'deck');
