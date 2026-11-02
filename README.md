@@ -35,6 +35,8 @@ The Layouts tab has **Download 3D model (.glb)**: the whole flat with named piec
   **Cmd** box at the bottom of the editor. It imports the newest `casa-ams-*.glb` (and `casa-context.glb`) from Downloads
   into a level with an Amsterdam sun and sky, clouds, fog, a light in every lamp (tag `CasaLamp`) and a Player Start;
   press Play and walk with W A S D. Running it again adds the city or re-aims the sun without importing the flat twice.
+  To run it from a terminal instead, tick *Enable Remote Execution* (Project Settings › Plugins › Python) and use
+  Windows Python: `python tools/unreal/remote.py "path/to/tools/unreal/casa_setup.py" --north 0`.
 
 ## Run locally
 

@@ -14,7 +14,6 @@ Everything it adds is labelled "Casa ..." in the Outliner, so you can see what e
 """
 import argparse
 import glob
-import math
 import os
 import re
 import sys
@@ -108,43 +107,13 @@ def add_sky():
 
 def orient_sun(north):
     """SunSky computes Amsterdam's real sun; turn its compass so the sun comes in on the right side of the flat.
-    The drawing's x axis is Unreal's +X and faces the bearing north + 90. Rather than trust SunSky's compass
-    convention, measure it: where the sun points with NorthOffset 0 and 90, against the sun's real bearing."""
+    SunSky aims its light at yaw = the sun's compass bearing + NorthOffset (measured in UE 5.8: NorthOffset 0
+    puts north on +X), and the drawing's x axis is Unreal's +X, facing the bearing north + 90."""
     sky = labelled('Casa Sun and Sky')
-    light = sky[0].get_component_by_class(unreal.DirectionalLightComponent) if sky else None
-    if not light:
-        return
-    s = sky[0]
-
-    def towards_sun(offset):
-        s.set_editor_property('NorthOffset', offset)
-        f = light.get_forward_vector()
-        return math.degrees(math.atan2(-f.y, -f.x)), math.degrees(math.asin(max(-1.0, min(1.0, -f.z))))
-
-    try:
-        (y0, elev), (y90, _) = towards_sun(0.0), towards_sun(90.0)
-        lat, lon, tz = AMSTERDAM
-        h = float(s.get_editor_property('SolarTime'))
-        try:
-            year = int(s.get_editor_property('Year'))
-        except Exception:
-            year = 2026
-        when = [year, int(s.get_editor_property('Month')), int(s.get_editor_property('Day'))]
-        # SunSky's own daylight-saving setting is whichever matches the sun height it shows
-        sun = min((unreal.SunPositionFunctionLibrary.get_sun_position(lat, lon, tz, dst, *when, int(h), int(h % 1 * 60), 0) for dst in (False, True)),
-                  key=lambda d: abs(d.elevation - elev))
-    except Exception as e:
-        log(f"couldn't aim the sun ({e}); turn NorthOffset on 'Casa Sun and Sky' by hand")
-        return
-    turn = (y90 - y0 + 180) % 360 - 180          # how far the sun swings when NorthOffset grows by 90
-    if abs(abs(turn) - 90) > 5:
-        towards_sun(0.0)
-        log(f'SunSky swung {turn:.0f}° instead of 90° for NorthOffset 90; set NorthOffset by hand')
-        return
-    want = sun.azimuth - (north + 90)            # the sun's real bearing, measured from the drawing's x axis
-    offset = ((want - y0) * 90 / turn) % 360
-    towards_sun(offset)
-    log(f'sun at bearing {sun.azimuth:.0f}°, height {sun.elevation:.0f}°: SunSky NorthOffset set to {offset:.0f}°')
+    if sky:
+        offset = -(north + 90) % 360
+        sky[0].set_editor_property('NorthOffset', offset)
+        log(f'SunSky NorthOffset set to {offset:.0f}° (the drawing\'s top faces {north:.0f}°)')
 
 
 def place_fog():
