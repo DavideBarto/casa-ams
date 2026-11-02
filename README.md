@@ -41,7 +41,8 @@ The Layouts tab has **Download 3D model (.glb)**: the whole flat with named piec
   Remote execution lets any program on this computer run code in the editor: untick it when you're done.
   `py "path/to/tools/unreal/casa_people.py" --heights 180,165` then puts two people in the living room, scaled to
   your heights, with a camera behind whoever you control; **Tab** switches between them. It needs the *All Toolsets*
-  plugin, whose Blueprint tools write the switching logic.
+  plugin, whose Blueprint tools write the switching logic. Add `--looks` with two MetaHuman Blueprints (built in
+  MetaHuman Creator at 1.80 m, the mannequin's height) to make them real-looking people instead of mannequins.
 
 ## Run locally
 

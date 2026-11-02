@@ -5,6 +5,10 @@ After casa_setup.py, type in the editor's Cmd box:
 --heights are the two people's heights in centimetres. Needs the "All Toolsets" plugin: its Blueprint tools
 write the switching logic (the SwitchPerson function in /Game/CasaAMS/People/BP_CasaPerson, open it to read it).
 
+--looks optionally dresses them as MetaHumans: Blueprints assembled with MetaHuman Creator (Optimized pipeline),
+built at 1.80 m so they match the mannequin they follow; the person's height then scales them. Each MetaHuman's body
+and clothes copy its hidden mannequin's pose (WearLookAlike), so walking, jumping and Tab work as before.
+
 BP_CasaPerson is a copy of the template's first-person character with a camera behind it and its full body shown;
 BP_CasaGameMode spawns no player of its own, so the first person placed here is the one you start as.
 Running it again updates both Blueprints and puts the two people back in the living room.
@@ -32,6 +36,23 @@ SWITCH = f'''
       (bind other (Utilities|Casting|CastToPawn :Object p)
         (:then
           (Pawn|Possess :self (Pawn|GetController) :InPawn other))
+        (:CastFailed)))))
+'''
+# WearLookAlike: a MetaHuman attached to the person follows its hidden mannequin bone for bone (same bone names).
+# The face keeps its own animation Blueprint, so only meshes without one follow.
+WEAR = '''
+(fn WearLookAlike ()
+  (bind kids (Actor|GetAttachedActors))
+  (for kid kids
+    (bind comps (Actor|GetComponentsByClass :self kid :ComponentClass "/Script/Engine.SkeletalMeshComponent"))
+    (for c comps
+      (bind sk (Utilities|Casting|CastToSkeletalMeshComponent :Object c)
+        (:then
+          (Utilities|IsValid (Components|SkeletalMesh|GetAnimInstance :self sk)
+            (:"Is Valid")
+            (:"Is Not Valid"
+              (Components|SkinnedMesh|SetLeaderPoseComponent :self sk :NewLeaderBoneComponent (Variables|Character|GetMesh))
+              (Rendering|SetVisibility :self (Variables|Character|GetMesh) :bNewVisibility false))))
         (:CastFailed)))))
 '''
 
@@ -69,27 +90,39 @@ def camera_behind(bp):
     body = part('Mesh')                     # the full body: the template hides it from its own player in two ways
     body.set_editor_property('owner_no_see', False)
     body.set_editor_property('first_person_primitive_type', unreal.FirstPersonPrimitiveType.NONE)
+    # hidden under a MetaHuman, it must keep animating for the MetaHuman to follow
+    body.set_editor_property('visibility_based_anim_tick_option', unreal.VisibilityBasedAnimTickOption.ALWAYS_TICK_POSE_AND_REFRESH_BONES)
+
+
+def function(bp, name, code):
+    names = [g.get_name() for g in B.list_graphs(bp)]
+    graph = B.get_graph(bp, name) if name in names else B.add_function_graph(bp, name)
+    # BlueprintTools.write_graph_dsl does this too, but swallows DSL errors outside an MCP tool call
+    blueprint_dsl.Transpiler(graph, B.create_node, B.connect_pins, info, B.set_pin_value, B.find_nodes,
+                             delete_node_fn=B.delete_node, find_node_types_fn=lambda f: B.find_node_types(graph, f)).transpile(code)
+
+
+def wire(graph, event, function_name, at):
+    """Call a function from a key or event node (the DSL can't hang code on keys), replacing an earlier wiring."""
+    for old in B.find_nodes(graph):
+        t = info(old).type_id
+        if t == f'CallFunction|{function_name}' or (t == event and not event.startswith('AddEvent|')):
+            B.delete_node(old)                  # an event like BeginPlay can exist only once: it is reused instead
+    start = next((n for n in B.find_nodes(graph) if info(n).type_id == event), None) or B.create_node(graph, event, unreal.IntPoint(0, at))
+    call = B.create_node(graph, f'CallFunction|{function_name}', unreal.IntPoint(250, at))
+    out = next(p for p in info(start).output_pins if p.name in ('Pressed', 'then'))
+    B.connect_pins(out.pin_id, next(p for p in info(call).input_pins if p.name == 'execute').pin_id)
 
 
 def switch_logic(bp):
-    names = [g.get_name() for g in B.list_graphs(bp)]
-    graph = B.get_graph(bp, 'SwitchPerson') if 'SwitchPerson' in names else B.add_function_graph(bp, 'SwitchPerson')
-    # BlueprintTools.write_graph_dsl does this too, but swallows DSL errors outside an MCP tool call
-    blueprint_dsl.Transpiler(graph, B.create_node, B.connect_pins, info, B.set_pin_value, B.find_nodes,
-                             delete_node_fn=B.delete_node, find_node_types_fn=lambda f: B.find_node_types(graph, f)).transpile(SWITCH)
-    # the DSL can't hang code on a key, so wire Tab's Pressed to a SwitchPerson call by hand
+    function(bp, 'SwitchPerson', SWITCH)
+    function(bp, 'WearLookAlike', WEAR)
     events = B.get_graph(bp, 'EventGraph')
-    for old in B.find_nodes(events):
-        if info(old).type_id in ('Input|KeyboardEvents|Tab', 'CallFunction|SwitchPerson'):
-            B.delete_node(old)
-    key = B.create_node(events, 'Input|KeyboardEvents|Tab', unreal.IntPoint(0, 1200))
-    call = B.create_node(events, 'CallFunction|SwitchPerson', unreal.IntPoint(250, 1200))
-    pressed = next(p for p in info(key).output_pins if p.name == 'Pressed')
-    execute = next(p for p in info(call).input_pins if p.name == 'execute')
-    B.connect_pins(pressed.pin_id, execute.pin_id)
+    wire(events, 'Input|KeyboardEvents|Tab', 'SwitchPerson', 1200)
+    wire(events, 'AddEvent|EventBeginPlay', 'WearLookAlike', 1500)
 
 
-def place(person, heights):
+def place(person, heights, looks):
     for old in [a for a in actors.get_all_level_actors() if a.get_actor_label().startswith('Casa Person')]:
         actors.destroy_actor(old)
     for i, (cm, mesh, (x, y)) in enumerate(zip(heights, MESHES, SPOTS)):
@@ -100,12 +133,19 @@ def place(person, heights):
         a.get_editor_property('mesh').set_skeletal_mesh_asset(unreal.load_asset(mesh))
         if i == 0:
             a.set_editor_property('auto_possess_player', unreal.AutoReceiveInput.PLAYER0)
+        if i < len(looks):              # a MetaHuman on the mannequin; WearLookAlike makes it follow at Play
+            mh = actors.spawn_actor_from_class(unreal.load_asset(looks[i]).generated_class(), a.get_actor_location())
+            mh.set_actor_label(f'Casa Person {i + 1} look')
+            snap = unreal.AttachmentRule.SNAP_TO_TARGET
+            mh.attach_to_component(a.get_editor_property('mesh'), '', snap, snap, snap, False)
 
 
 def main():
     p = argparse.ArgumentParser(prog='casa_people.py')
     p.add_argument('--heights', default='180,165', help='the two heights in cm, comma-separated')
-    heights = [float(h) for h in p.parse_args(sys.argv[1:]).heights.split(',')][:2]
+    p.add_argument('--looks', default='', help='MetaHuman Blueprints to wear, comma-separated (built at 1.80 m, the mannequin height)')
+    a = p.parse_args(sys.argv[1:])
+    heights, looks = [float(h) for h in a.heights.split(',')][:2], [l for l in a.looks.split(',') if l]
     editor = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
     if not editor.get_editor_world().get_path_name().startswith(LEVEL + '.'):
         unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).load_level(LEVEL)
@@ -119,7 +159,7 @@ def main():
         B.create(FOLDER, 'BP_CasaGameMode', unreal.load_asset(f'{FIRST_PERSON}GameMode').generated_class())
     unreal.get_default_object(mode.generated_class()).set_editor_property('default_pawn_class', None)
     editor.get_editor_world().get_world_settings().set_editor_property('default_game_mode', mode.generated_class())
-    place(person.generated_class(), heights)
+    place(person.generated_class(), heights, looks)
 
     unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level()
     unreal.EditorAssetLibrary.save_directory(FOLDER, only_if_is_dirty=False)
