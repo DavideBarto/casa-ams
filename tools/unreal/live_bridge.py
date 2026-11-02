@@ -161,6 +161,10 @@ def worker():
                 print(f"v{job['v']}: {sync_error or note}", flush=True)
                 last, last_node, unsaved = job, node, True
                 save_at = time.monotonic() + 10       # once you stop arranging for a while
+                if sync_error:                        # e.g. Unreal still loading the flat: try again shortly
+                    with wake:
+                        pending = pending or job
+                    time.sleep(10)
             elif unsaved and time.monotonic() > save_at:
                 unsaved = not run(rex, node, 'casa_live.save()')[0].endswith('saved')
                 save_at = time.monotonic() + 30       # in Play, or it failed: try again later
@@ -183,6 +187,8 @@ def main():
     p.add_argument('--project', default=PROJECT, help='the Unreal project --open starts')
     args = p.parse_args()
     if args.open:
+        if not os.path.exists(args.project):
+            sys.exit(f'No Unreal project at {args.project}: point --project at yours.')
         tasks = subprocess.run(['tasklist', '/fi', 'imagename eq UnrealEditor.exe'], capture_output=True, text=True).stdout
         if 'UnrealEditor.exe' not in tasks:   # its own process: closing this window must not close Unreal
             subprocess.Popen([os.path.normpath(EDITOR), args.project], creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
