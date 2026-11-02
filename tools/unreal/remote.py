@@ -31,14 +31,17 @@ def main():
         else:
             sys.exit('No Unreal Editor answered: is it open, with Enable Remote Execution ticked?')
         rex.open_command_connection(rex.remote_nodes[0]['node_id'])
-        result = rex.run_command(command)
+        try:
+            result = rex.run_command(command)
+        except RuntimeError:  # ponytail: the engine's client gives up on replies over ~8 KB; print less or write to a file
+            sys.exit("Unreal's reply was cut off: it was probably too long, print less or write it to a file")
     finally:
         rex.stop()
+    sys.stdout.reconfigure(encoding='utf-8')     # piped Windows Python would write cp1252 and choke on other characters
     for line in result['output']:
         print(line['output'].rstrip('\n'))
     if not result['success']:
-        print(result['result'], file=sys.stderr)
-        sys.exit(1)
+        sys.exit(result['result'])
 
 
 if __name__ == '__main__':

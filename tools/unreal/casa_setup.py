@@ -112,7 +112,11 @@ def orient_sun(north):
     sky = labelled('Casa Sun and Sky')
     if sky:
         offset = -(north + 90) % 360
-        sky[0].set_editor_property('NorthOffset', offset)
+        try:
+            sky[0].set_editor_property('NorthOffset', offset)
+        except Exception as e:  # property names differ between engine versions; still save the level
+            log(f"couldn't aim the sun ({e}); set NorthOffset on 'Casa Sun and Sky' to {offset:.0f} by hand")
+            return
         log(f'SunSky NorthOffset set to {offset:.0f}° (the drawing\'s top faces {north:.0f}°)')
 
 
@@ -160,13 +164,18 @@ def add_lamp_lights():
 
 
 def tune_pieces():
-    """Nanite can't draw see-through glass (it shows a grey grid instead), and a lamp's own shade must not block its bulb."""
-    glass = shades = 0
+    """Nanite can't draw see-through glass (it shows a grey grid instead), the balcony doors must let the player through,
+    and a lamp's own shade must not block its bulb."""
+    glass = shades = doors = 0
     for a in filter(is_flat, actors.get_all_level_actors()):
         comp, names = materials(a)
         if any(n.lower().startswith('glass') for n in names):
             comp.set_editor_property('disallow_nanite', True)
             glass += 1
+            centre, half = a.get_actor_bounds(False)
+            if centre.z - half.z < 5 and 2 * half.z > 220:   # floor-to-ceiling glass is the balcony doors: walk through
+                comp.set_collision_profile_name('NoCollision')
+                doors += 1
         if any(LIGHT_MAT.search(n) for n in names):
             parent = a.get_attach_parent_actor()
             for part in parent.get_attached_actors(True, True) if parent else [a]:
@@ -174,7 +183,18 @@ def tune_pieces():
                 if c:
                     c.set_cast_shadow(False)
                     shades += 1
-    log(f'{glass} glass pieces drawn without Nanite, {shades} lamp parts no longer cast shadows')
+    log(f'{glass} glass pieces drawn without Nanite ({doors} balcony doors you can walk through), {shades} lamp parts no longer cast shadows')
+
+
+def make_solid():
+    """The glTF import gives meshes no collision, so the player falls through the floor: collide with their own triangles."""
+    meshes = {mesh_path(a): a.static_mesh_component.static_mesh for a in [*filter(is_flat, actors.get_all_level_actors()), *city()]}
+    for m in meshes.values():
+        body = m.get_editor_property('body_setup')
+        if body and body.get_editor_property('collision_trace_flag') != unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE:
+            m.modify()                                   # so save_directory writes it
+            body.set_editor_property('collision_trace_flag', unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE)
+    log(f'{len(meshes)} meshes made solid (walls, floors, furniture and the city)')
 
 
 def add_player_start():
@@ -193,6 +213,7 @@ def imported_count():
 
 def finish(fresh, north):
     tune_pieces()
+    make_solid()
     if fresh:
         add_sky()
         add_lamp_lights()

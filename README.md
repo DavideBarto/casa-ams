@@ -36,7 +36,9 @@ The Layouts tab has **Download 3D model (.glb)**: the whole flat with named piec
   into a level with an Amsterdam sun and sky, clouds, fog, a light in every lamp (tag `CasaLamp`) and a Player Start;
   press Play and walk with W A S D. Running it again adds the city or re-aims the sun without importing the flat twice.
   To run it from a terminal instead, tick *Enable Remote Execution* (Project Settings › Plugins › Python) and use
-  Windows Python: `python tools/unreal/remote.py "path/to/tools/unreal/casa_setup.py" --north 0`.
+  Windows Python (`python.exe` from WSL): `python tools/unreal/remote.py "path/to/tools/unreal/casa_setup.py" --north 0`.
+  The import finishes after the command returns, so progress and errors still go to the editor's Output Log.
+  Remote execution lets any program on this computer run code in the editor: untick it when you're done.
 
 ## Run locally
 
