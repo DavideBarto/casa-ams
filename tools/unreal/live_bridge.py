@@ -86,10 +86,10 @@ class Handler(BaseHTTPRequestHandler):
         global pending
         if not self.allowed():
             return
-        size = int(self.headers.get('Content-Length') or 0)
-        if not 0 <= size <= 64 << 20:
+        size = self.headers.get('Content-Length') or '0'
+        if not size.isdecimal() or int(size) > 64 << 20:
             return self.send_error(413)
-        body = self.rfile.read(size)
+        body = self.rfile.read(int(size))
         mesh = re.fullmatch(r'/mesh/([0-9a-f]{16})', self.path)
         if mesh and body[:4] == b'glTF':
             tmp = os.path.join(CACHE, f'{mesh[1]}.part')
@@ -135,7 +135,7 @@ def worker():
     last, last_node, unsaved, save_at = None, None, False, 0
     while True:
         with wake:
-            if pending is None:                       # a change may have come in during the last sync
+            if pending is None or not state['unreal']:   # a change may have come in during the last sync
                 wake.wait(timeout=2)
             job, nodes = pending, rex.remote_nodes
             state['unreal'] = bool(nodes)
@@ -155,13 +155,15 @@ def worker():
                 last, last_node, unsaved = job, node, True
                 save_at = time.monotonic() + 10       # once you stop arranging for a while
             elif unsaved and time.monotonic() > save_at:
-                unsaved = run(rex, node, 'casa_live.save()')[0] != 'saved'
+                unsaved = not run(rex, node, 'casa_live.save()')[0].endswith('saved')
                 save_at = time.monotonic() + 30       # in Play, or it failed: try again later
+                state['error'] = None
         except Exception as e:                        # the editor closed or is busy: try again in a moment
             state['error'] = f'Unreal did not answer ({e})'
             print(state['error'], flush=True)
             with wake:
                 pending = pending or job
+            time.sleep(2)
 
 
 class Server(ThreadingHTTPServer):

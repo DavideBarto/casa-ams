@@ -40,7 +40,7 @@ export function startLive(pieces, toolbar) {
   const pill = document.createElement('span');
   pill.className = 'live'; pill.setAttribute('role', 'status');
   toolbar.append(pill);
-  let v = 0, sent = 0, last = '', online = null, timer = 0, running = false, again = false;
+  let v = 0, sent = 0, last = '', problem = '', online = null, timer = 0, running = false, again = false;
   const OFF = 'Start Casa Live on this computer; if Chrome asks, allow this site to reach other apps on this device.';
   const show = (state, text, title = '') => {
     if (pill.textContent === text && pill.title === title) return;   // a status region re-announces any rewrite
@@ -68,8 +68,9 @@ export function startLive(pieces, toolbar) {
         for (const key of (await r.json()).missing) await post('/mesh/' + key, all.find(p => p.key === key).glb);
         r = await post('/layout', body);
       }
-      if (!r.ok) { show('error', 'Unreal: not updated', `Casa Live answered ${r.status}`); return; }
-      sent = v; last = items; poll();
+      problem = r.ok ? '' : `Casa Live refused the plan (${r.status})`;
+      if (r.ok) { sent = v; last = items; }
+      poll();
     } catch { offline(); }
     finally { running = false; if (again) { again = false; push(); } }
   }
@@ -81,7 +82,7 @@ export function startLive(pieces, toolbar) {
       online = true;
       if (!s.unreal) show('off', 'Unreal: not open', 'Open Unreal Engine with the flat');
       else if (s.done < sent) show('busy', 'Unreal: updating…');
-      else if (s.error) show('error', 'Unreal: not updated', s.error);
+      else if (problem || s.error) show('error', 'Unreal: not updated', problem || s.error);
       else show('ok', 'Unreal: up to date', s.note);
     } catch { offline(); }
   }

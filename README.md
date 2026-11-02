@@ -48,7 +48,8 @@ The Layouts tab has **Download 3D model (.glb)**: the whole flat with named piec
   move, turn, swap, new piece or deletion in the planner shows up in the Unreal level about a second later; the dot at
   the top says whether Unreal is up to date. The first time, Chrome asks whether the site may reach other apps on this
   device: allow it. The live pieces replace the furniture that came in with the flat's `.glb` and are labelled
-  "Casa Live ..." in the Outliner. While you walk in Play, changes wait for the next Play.
+  "Casa Live ..." in the Outliner. While you walk in Play, changes wait for the next Play. So that Unreal keeps up while
+  you work in the planner, Casa Live turns off *Use Less CPU when in Background* (Editor Preferences › Performance).
 
 ## Run locally
 
