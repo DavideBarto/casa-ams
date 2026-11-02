@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import CameraControls from 'camera-controls';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildApartment, ROOMS, DOORS, BOUNDS } from './apartment.js';
@@ -18,6 +18,7 @@ const ikeaUrl = u => (typeof u === 'string' && u.startsWith('https://www.ikea.co
 
 // ---------- data ----------
 const [dims, seed] = await Promise.all([fetch('data/dims.json').then(r => r.json()), fetch('data/default-layout.json').then(r => r.json())]);
+performance.mark('casa-data');
 
 function suggestedItems() {
   const items = seed.map(s => {
@@ -77,7 +78,8 @@ function travel(from, to) {
 
 // ---------- scene ----------
 const stage = $('#stage');
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+// Ask for the fast GPU: on laptops with two chips Chrome otherwise often draws on the weak integrated one.
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -90,8 +92,14 @@ const scene = new THREE.Scene();
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = 0.35;
 const camera = new THREE.PerspectiveCamera(42, 1, 0.05, 200);
-const controls = new OrbitControls(camera, renderer.domElement);
-Object.assign(controls, { enableDamping: true, maxPolarAngle: 88 * D2R, minDistance: 1.2, maxDistance: 40 });
+CameraControls.install({ THREE });
+const controls = new CameraControls(camera, renderer.domElement);   // smooth orbit/pan/zoom-to-pointer, with transitions
+Object.assign(controls, { minDistance: 1, maxDistance: 40, maxPolarAngle: 88 * D2R, dollyToCursor: true, smoothTime: 0.18, draggingSmoothTime: 0.06 });
+const A = CameraControls.ACTION;
+
+// Draw only when something changed: the camera moved, or the scene did (invalidate()).
+let dirty = true;
+const invalidate = () => { dirty = true; };
 
 scene.add(new THREE.HemisphereLight(0xf4f7ff, 0xb9ad96, 1.3));
 const sun = new THREE.DirectionalLight(0xfff4e6, 2.2);
@@ -102,7 +110,7 @@ sun.shadow.camera.updateProjectionMatrix(); sun.shadow.bias = -0.0004;
 scene.add(sun, sun.target);
 
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const applyTheme = () => { scene.background = new THREE.Color(cssVar('--scene') || '#dde3ea'); };
+const applyTheme = () => { scene.background = new THREE.Color(cssVar('--scene') || '#dde3ea'); invalidate(); };
 applyTheme();
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
@@ -123,6 +131,7 @@ const guideMat = new THREE.LineBasicMaterial({ color: 0x2b4c9b, depthTest: false
 
 function dropView(id) {
   const v = views.get(id); if (!v) return;
+  invalidate();
   furniture.remove(v.group);
   v.group.traverse(o => o.geometry?.dispose());
   views.delete(id);
@@ -141,11 +150,13 @@ function renderItem(it) {
   group.traverse(o => { o.userData.uid = it.uid; });
   furniture.add(group);
   views.set(it.uid, { group, foot });
+  invalidate();
 }
 function renderAll() { for (const id of [...views.keys()]) dropView(id); items().forEach(renderItem); }
 function placeView(it) {
   const v = views.get(it.uid); if (!v) return;
   v.group.position.set(m(it.x), 0, m(it.y)); v.group.rotation.y = (it.rot || 0) * D2R;
+  invalidate();
 }
 
 // ---------- view modes ----------
@@ -164,13 +175,13 @@ function applyVisibility() {
     v.foot.visible = mode === 'top' || state !== 'idle';
   }
   for (const l of apt.labels) l.visible = labelsOn && mode !== 'walk';
+  invalidate();
 }
 
-let tween = null;
-function flyTo(pos, target, ms = 650) {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) ms = 0;
-  tween = { p0: camera.position.clone(), t0: controls.target.clone(), p1: pos, t1: target, start: performance.now(), ms };
-}
+const smooth = () => !matchMedia('(prefers-reduced-motion: reduce)').matches;
+const flyTo = (pos, target) => controls.normalizeRotations().setLookAt(pos.x, pos.y, pos.z, target.x, target.y, target.z, smooth());
+/** Frame a sphere (a room, a piece) keeping the current viewing angle. */
+const focus = sphere => controls.fitToSphere(sphere, smooth());
 const aspect = () => Math.max(stage.clientWidth / Math.max(stage.clientHeight, 1), 0.3);
 function homeView() {
   const k = Math.min(aspect() < 1 ? 1.25 / aspect() : 1, 2.4);
@@ -195,20 +206,26 @@ function setMode(next) {
   mode = next;
   for (const id of ['orbit', 'top', 'walk']) $('#v-' + id).setAttribute('aria-pressed', String(id === mode));
   $('#pad').hidden = mode !== 'walk';
+  const fromWalk = !controls.enabled;
   controls.enabled = mode !== 'walk';
   camera.fov = mode === 'walk' ? 70 : 42; camera.updateProjectionMatrix();
   if (mode === 'walk') {
-    tween = null; walkObstacles();
+    walkObstacles();
     walk.pos.set(m(5200), 1.6, m(550)); walk.yaw = 90 * D2R; walk.pitch = -0.08;
   } else {
-    controls.enableRotate = mode === 'orbit';
-    controls.mouseButtons.LEFT = mode === 'top' ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
-    controls.touches.ONE = mode === 'top' ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE;
-    flyTo(...(mode === 'top' ? topView() : homeView()));
+    if (fromWalk) {   // start the transition from where the walker stands
+      const ahead = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).add(camera.position);
+      controls.setLookAt(camera.position.x, camera.position.y, camera.position.z, ahead.x, ahead.y, ahead.z, false);
+    }
+    const top = mode === 'top';
+    Object.assign(controls.mouseButtons, { left: top ? A.TRUCK : A.ROTATE, right: A.TRUCK, wheel: A.DOLLY, middle: A.DOLLY });
+    Object.assign(controls.touches, { one: top ? A.TOUCH_TRUCK : A.TOUCH_ROTATE, two: A.TOUCH_DOLLY_TRUCK, three: A.TOUCH_TRUCK });
+    flyTo(...(top ? topView() : homeView()));
   }
+  invalidate();
   $('#hint').textContent = {
-    orbit: 'Drag furniture to move it · drag empty space to orbit · R rotates · Delete removes · Ctrl+Z undoes',
-    top: 'Drag furniture to move it · drag empty space to pan · scroll to zoom · R rotates',
+    orbit: 'Drag furniture to move it · drag space to orbit, right-drag to pan · scroll zooms to the pointer · double-click to focus · R rotates',
+    top: 'Drag furniture to move it · drag space to pan · scroll zooms to the pointer · double-click to focus · R rotates',
     walk: 'W A S D or arrow keys to walk · drag to look around · click furniture to select it',
   }[mode];
   applyVisibility();
@@ -261,12 +278,7 @@ function select(id, fly = false) {
     it.variants = [];
     byItemNo(it.itemNo).then(p => { if (p) { it.variants = toItem(p, dims).variants; if (selected === it.uid) renderCard(); save(); } }).catch(() => {});
   }
-  if (fly && v && mode !== 'walk') {
-    const bb = new THREE.Box3().setFromObject(v.group), c = bb.getCenter(new THREE.Vector3());
-    const size = Math.max(bb.getSize(new THREE.Vector3()).length(), 1.2);
-    if (mode === 'top') flyTo(new THREE.Vector3(c.x, Math.max(size * 2.4, 4.5), c.z + 0.01), new THREE.Vector3(c.x, 0, c.z));
-    else flyTo(c.clone().add(new THREE.Vector3(-0.45, 0.8, 0.6).normalize().multiplyScalar(size * 1.8 + 1.6)), c);
-  }
+  if (fly && v && mode !== 'walk') focusItem(v.group);
   applyVisibility(); drawOverlay(); renderCard(); renderList();
   if (!$('#pane-add').hidden) renderResults();   // swap buttons depend on the selection
 }
@@ -364,8 +376,16 @@ function hit(ev) {
 }
 function floorAt(ev) { setRay(ev); const p = new THREE.Vector3(); return ray.ray.intersectPlane(floorPlane, p) ? p : null; }
 
+function focusItem(group) {
+  const s = new THREE.Box3().setFromObject(group).getBoundingSphere(new THREE.Sphere());
+  s.radius = Math.max(s.radius * 1.5, 1.2);
+  focus(s);
+}
+
 let press = null;   // { x, y, drag?: { it, ox, oy, moved } , look?: true }
-renderer.domElement.addEventListener('pointerdown', e => {
+// Capture phase on the stage, so this runs before the camera controls see the press and can be told to stand still.
+stage.addEventListener('pointerdown', e => {
+  if (e.target !== renderer.domElement || !e.isPrimary) return;   // extra fingers belong to pinch/pan
   press = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY };
   if (mode === 'walk') { press.look = true; renderer.domElement.setPointerCapture(e.pointerId); return; }
   const id = hit(e), it = id && get(id);
@@ -378,13 +398,21 @@ renderer.domElement.addEventListener('pointerdown', e => {
       if (it.uid !== selected) select(it.uid);
     }
   }
+}, { capture: true });
+// Double-click: a piece flies into view; empty floor becomes the new centre of rotation.
+renderer.domElement.addEventListener('dblclick', e => {
+  if (mode === 'walk') return;
+  const id = hit(e), v = id && views.get(id);
+  if (v) return focusItem(v.group);
+  const p = floorAt(e);
+  if (p) controls.moveTo(p.x, 0, p.z, smooth());   // camera travels with it, so Plan stays top-down
 });
 renderer.domElement.addEventListener('pointermove', e => {
-  if (!press) return;
+  if (!press || !e.isPrimary) return;
   if (press.look) {
     walk.yaw -= (e.clientX - press.lx) * 0.005;
     walk.pitch = Math.max(-1.2, Math.min(1.2, walk.pitch - (e.clientY - press.ly) * 0.004));
-    press.lx = e.clientX; press.ly = e.clientY;
+    press.lx = e.clientX; press.ly = e.clientY; invalidate();
     return;
   }
   const d = press.drag; if (!d) return;
@@ -402,13 +430,14 @@ renderer.domElement.addEventListener('pointermove', e => {
   runChecks();
 });
 renderer.domElement.addEventListener('pointerup', e => {
-  if (!press) return;
+  if (!press || !e.isPrimary) return;
   const d = press.drag, click = Math.hypot(e.clientX - press.x, e.clientY - press.y) < 6;
   if (d) { controls.enabled = mode !== 'walk'; if (d.moved) changed(); }
   else if (click) select(hit(e));
   press = null;
 });
-renderer.domElement.addEventListener('pointercancel', () => {
+renderer.domElement.addEventListener('pointercancel', e => {
+  if (!e.isPrimary) return;
   if (press?.drag) { controls.enabled = mode !== 'walk'; if (press.drag.moved) changed(); }
   press = null;
 });
@@ -613,7 +642,8 @@ $('#swapbar button').addEventListener('click', () => { results.swapping = null; 
 // New pieces land where you're looking.
 function dropPoint() {
   if (mode === 'walk') return { x: Math.round((walk.pos.x - Math.sin(walk.yaw) * 1.5) * 1000), y: Math.round((walk.pos.z - Math.cos(walk.yaw) * 1.5) * 1000) };
-  return { x: Math.round(controls.target.x * 1000), y: Math.round(controls.target.z * 1000) };
+  const t = controls.getTarget(new THREE.Vector3());
+  return { x: Math.round(t.x * 1000), y: Math.round(t.z * 1000) };
 }
 
 $('#own').addEventListener('submit', e => {
@@ -716,6 +746,17 @@ toggle('#t-zones', () => zonesOn, v => { zonesOn = v; });
 $('#t-undo').onclick = () => travel(undoStack, redoStack);
 $('#t-redo').onclick = () => travel(redoStack, undoStack);
 $('#t-reset').onclick = () => { select(null); setMode(mode === 'walk' ? 'orbit' : mode); };
+$('#room-go').addEventListener('change', e => {
+  const room = ROOMS.find(r => r.id === e.target.value);
+  if (mode === 'walk') setMode('orbit');
+  if (!room) flyTo(...(mode === 'top' ? topView() : homeView()));
+  else {
+    const xs = room.rects.flatMap(r => [r[0], r[2]]), ys = room.rects.flatMap(r => [r[1], r[3]]);
+    const box = new THREE.Box3(new THREE.Vector3(m(Math.min(...xs)), 0, m(Math.min(...ys))), new THREE.Vector3(m(Math.max(...xs)), 1.2, m(Math.max(...ys))));
+    focus(box.getBoundingSphere(new THREE.Sphere()));
+  }
+  e.target.value = '';
+});
 
 let toastTimer;
 function toast(text) {
@@ -740,25 +781,26 @@ function changed() {
 }
 
 // ---------- loop ----------
+let lowRes = false;   // drawing at 1x while the view moves
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setPixelRatio(lowRes ? 1 : Math.min(devicePixelRatio, 2));
   renderer.setSize(w, h, false); labelRenderer.setSize(w, h);
   camera.aspect = w / Math.max(h, 1); camera.updateProjectionMatrix();
+  invalidate();
 }
 new ResizeObserver(resize).observe(stage);
+addEventListener('resize', resize);   // also fires when the window moves to a screen with another pixel ratio
 resize();
 
 // ?debug exposes the scene for automated screenshots (tests only)
-if (new URLSearchParams(location.search).has('debug')) window.casa = { THREE, renderer, scene, camera, controls, resize, items, get };
+if (new URLSearchParams(location.search).has('debug')) window.casa = { THREE, renderer, scene, camera, controls, resize, items, get, renderAll, renderItem, runChecks, select, changed, labelRenderer, apt, furniture, applyVisibility, drawOverlay, checkLayout: () => checkLayout(items(), { walls: apt.walls, doors: DOORS, rooms: ROOMS }) };
 
 const clock = new THREE.Clock();
 function frame() {
+  requestAnimationFrame(frame);
   const dt = Math.min(clock.getDelta(), 0.05);
-  if (tween) {
-    const t = tween.ms ? Math.min(1, (performance.now() - tween.start) / tween.ms) : 1, k = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-    camera.position.lerpVectors(tween.p0, tween.p1, k); controls.target.lerpVectors(tween.t0, tween.t1, k);
-    if (t >= 1) tween = null;
-  }
+  let moving = false;
   if (mode === 'walk') {
     const has = k => walk.keys.has(k) || walk.pad.has(k);
     walk.yaw += ((has('l') ? 1 : 0) - (has('r') ? 1 : 0)) * 1.8 * dt;
@@ -767,12 +809,17 @@ function frame() {
     const dx = (-sin * f + cos * s) * sp, dz = (-cos * f - sin * s) * sp;
     if (!blocked(walk.pos.x + dx, walk.pos.z)) walk.pos.x += dx;
     if (!blocked(walk.pos.x, walk.pos.z + dz)) walk.pos.z += dz;
+    moving = !!(f || s || has('l') || has('r') || press?.look);
     camera.position.copy(walk.pos); camera.rotation.set(walk.pitch, walk.yaw, 0, 'YXZ');
-  } else controls.update();
+  } else moving = controls.update(dt);
+  // While the view moves, draw at 1× pixels (~30% cheaper frames); one sharp frame when it stops.
+  const active = moving || !!press?.drag?.moved, fullRes = Math.min(devicePixelRatio, 2);   // read live: the window may change screens
+  if (fullRes > 1 && active !== lowRes) { lowRes = active; resize(); }
+  if (!moving && !dirty) return;
+  dirty = false;
   if (selBox.visible) { const v = views.get(selected); if (v) selBox.setFromObject(v.group); }
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
-  requestAnimationFrame(frame);
 }
 
 // a shared link opens as a new layout, also when pasted into an open tab
@@ -789,7 +836,9 @@ window.addEventListener('hashchange', openSharedLink);
 await openSharedLink();
 
 renderAll();
-const [p0, t0] = homeView(); camera.position.copy(p0); controls.target.copy(t0);
+performance.mark('casa-built');
+const [p0, t0] = homeView(); controls.setLookAt(p0.x, p0.y, p0.z, t0.x, t0.y, t0.z, false);
 changed();
 showTab('list');
 frame();
+performance.mark('casa-ready');
