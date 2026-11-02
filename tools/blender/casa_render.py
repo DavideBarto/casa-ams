@@ -5,7 +5,9 @@ Render everything without opening Blender's window:
 Only set up the scene and save it, to explore it yourself in Blender:
     blender -b -P casa_render.py -- --glb casa-ams.glb --out renders --no-render
 Options: --times morning,afternoon,sunset,night  --views living,kitchen,bedroom,balcony,overview
-         --samples 128  --res 1600x1000  --north 0 (degrees the drawing's top is turned from north)
+         --samples 128  --res 1600x1000  --north 0 (compass bearing the drawing's top edge faces)
+         --site X,Y,Z --radius 1000 (real buildings and water around, Netherlands only: the drawing's origin in
+         RD New metres and metres above NAP; also writes casa-context.glb next to the flat's .glb for Unreal)
 
 What it does, so you can find it in the .blend: imports the flat, adds a ceiling, a sun and a physical sky
 for the chosen time of day, turns the lamps' glowing parts into real lights, upgrades materials (glass,
@@ -13,12 +15,14 @@ mirrors, fabric, a real oak laminate floor from Poly Haven, CC0), adds one camer
 the GPU (OptiX on NVIDIA).
 """
 import argparse
+import hashlib
 import json
 import math
 import os
 import sys
 import urllib.request
 
+import bmesh
 import bpy
 import mathutils
 
@@ -33,6 +37,8 @@ def parse_args():
     p.add_argument('--samples', type=int, default=128)
     p.add_argument('--res', default='1600x1000')
     p.add_argument('--north', type=float, default=0.0)
+    p.add_argument('--site', help="real surroundings (NL only): RD New x,y and NAP height in metres of the drawing's origin")
+    p.add_argument('--radius', type=float, default=1000, help='metres of city around the flat, with --site')
     p.add_argument('--no-render', action='store_true')
     return p.parse_args(argv)
 
@@ -52,10 +58,10 @@ VIEWS = {
 }
 # sun elevation°, azimuth° (from north, clockwise), sun strength, sky strength, lamps on, exposure
 TIMES = {
-    'morning': (16, 95, 3.5, 1.0, False, 0.2),
-    'afternoon': (42, 200, 4.0, 1.0, False, 0.0),
-    'sunset': (3, 285, 2.5, 0.7, True, 0.8),
-    'night': (-15, 300, 0.0, 0.02, True, 1.2),
+    'morning': (16, 95, 30, 0.4, False, -1.5),
+    'afternoon': (42, 200, 30, 0.4, False, -1.5),
+    'sunset': (3, 285, 12, 0.35, True, -0.5),
+    'night': (-15, 300, 0.0, 0.02, True, 0.0),
 }
 INTERIOR = (-100, -2165, 9290, 6350)   # planner mm: where the ceiling goes (not over the balcony)
 CEILING_H = 2600
@@ -170,6 +176,146 @@ def upgrade_materials(out_dir):
                 nt.links.new(nmap.outputs['Normal'], b.inputs['Normal'])
         elif kind == 'wall':
             set_input(b, ['Roughness'], 0.9)
+    for obj in bpy.data.objects:
+        if obj.type == 'MESH' and any(s.material and s.material.name.split('.')[0] == 'glass' for s in obj.material_slots):
+            obj.visible_shadow = False   # let the sun through the panes: Cycles won't trace sunlight through real glass
+
+
+RD = 'http://www.opengis.net/def/crs/EPSG/0/28992'   # Dutch national grid: metres east / north
+
+
+def cached_json(url, cache):
+    path = os.path.join(cache, hashlib.md5(url.encode()).hexdigest() + '.json')
+    if not os.path.exists(path):
+        with fetch(url) as r, open(path + '.part', 'wb') as f:
+            f.write(r.read())
+        os.replace(path + '.part', path)
+    with open(path, encoding='utf-8') as f:
+        return json.load(f)
+
+
+def pages(url, cache):
+    """Follow an OGC API's 'next' links."""
+    while url:
+        d = cached_json(url, cache)
+        yield d
+        url = next((l['href'] for l in d.get('links', []) if l.get('rel') == 'next'), None)
+
+
+def inside(x, y, ring):
+    c = False
+    for (x1, y1), (x2, y2) in zip(ring, ring[1:] + ring[:1]):
+        if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
+            c = not c
+    return c
+
+
+def thin(ring, step=2.0):
+    """Drop points closer than step metres to the last one kept: BGT outlines are traced at centimetre detail."""
+    kept = ring[:1]
+    for p in ring[1:]:
+        if math.dist(p[:2], kept[-1][:2]) >= step:
+            kept.append(p)
+    return kept if len(kept) >= 3 else ring
+
+
+def mesh_object(name, verts, faces, mat, coll):
+    me = bpy.data.meshes.new(name)
+    me.from_pydata(verts, [], faces)
+    me.validate()
+    me.materials.append(mat)
+    obj = bpy.data.objects.new(name, me)
+    coll.objects.link(obj)
+    return obj
+
+
+def flat_mat(name, color, roughness, **inputs):
+    mat = bpy.data.materials.new(name)
+    mat.use_nodes = True
+    b = bsdf_of(mat)
+    set_input(b, ['Base Color'], (*color, 1))
+    set_input(b, ['Roughness'], roughness)
+    for k, v in inputs.items():
+        set_input(b, [k], v)
+    return mat
+
+
+def add_context(site, north, radius, cache):
+    """The real city around the flat: every building from the 3D BAG (TU Delft, CC BY 4.0) with its real roof shape,
+    and the water from the BGT (Dutch large-scale topography, CC0). The flat's own building is cut off below the flat."""
+    try:
+        e0, n0, z0 = (float(v) for v in site.split(','))
+    except ValueError:
+        raise SystemExit(f'--site needs X,Y,Z (RD New metres and metres above NAP), got {site!r}')
+    c, s = math.cos(math.radians(north)), math.sin(math.radians(north))
+    local = lambda e, n, z: ((e - e0) * c - (n - n0) * s, (e - e0) * s + (n - n0) * c, z - z0)
+    os.makedirs(cache, exist_ok=True)
+    coll = bpy.data.collections.new('Context')
+    bpy.context.scene.collection.children.link(coll)
+    box = lambda r: f'{e0 - r:.0f},{n0 - r:.0f},{e0 + r:.0f},{n0 + r:.0f}'
+
+    town, own = ([], []), ([], [])
+    for d in pages(f'https://api.3dbag.nl/collections/pand/items?bbox={box(radius)}&limit=100', cache):
+        (sx, sy, sz), (tx, ty, tz) = d['metadata']['transform']['scale'], d['metadata']['transform']['translate']
+        for f in d['features']:
+            v = f['vertices']
+            xyz = lambda i: (v[i][0] * sx + tx, v[i][1] * sy + ty, v[i][2] * sz + tz)
+            mine = any(inside(e0, n0, [xyz(i)[:2] for i in g['boundaries'][0][0]])
+                       for o in f['CityObjects'].values() if o['type'] == 'Building'
+                       for g in o.get('geometry', []) if g['lod'] == '0')
+            verts, faces = own if mine else town
+            ids = {}
+            for o in f['CityObjects'].values():
+                for g in o.get('geometry', []):
+                    if g['lod'] != '2.2':
+                        continue
+                    for shell in g['boundaries']:
+                        for surface in shell:   # ponytail: outer ring only, holes in walls are rare in LoD 2.2
+                            face = []
+                            for i in surface[0]:
+                                if i not in ids:
+                                    ids[i] = len(verts)
+                                    verts.append(local(*xyz(i)))
+                                face.append(ids[i])
+                            faces.append(face)
+    building = flat_mat('context-building', (0.5, 0.48, 0.45), 0.85)
+    mesh_object('Context buildings', *town, building, coll)
+    if own[1]:
+        tower = mesh_object('Context own building', *own, building, coll)
+        bm = bmesh.new()
+        bm.from_mesh(tower.data)
+        cut = bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, -0.35), plane_no=(0, 0, 1), clear_outer=True)
+        bmesh.ops.holes_fill(bm, edges=[e for e in cut['geom_cut'] if isinstance(e, bmesh.types.BMEdge) and e.is_valid], sides=0)
+        bm.to_mesh(tower.data)
+        bm.free()
+
+    ground_z = 1.0 - z0    # Amsterdam's streets are about 1 m above NAP; water drawn just above them
+    water_v, water_f = [], []
+    for d in pages(f'https://api.pdok.nl/lv/bgt/ogc/v1/collections/waterdeel/items?bbox={box(radius * 3)}&bbox-crs={RD}&crs={RD}&f=json&limit=1000', cache):
+        for f in d['features']:
+            if f['properties'].get('eind_registratie') or not f.get('geometry'):
+                continue   # older versions of the same water
+            g = f['geometry']
+            for poly in ([g['coordinates']] if g['type'] == 'Polygon' else g['coordinates']):
+                rings = [[local(e, n, 0)[:2] + (ground_z + 0.05,) for e, n, *_ in thin(ring[:-1])] for ring in poly]
+                base = len(water_v)
+                water_v += [p for ring in rings for p in ring]
+                water_f += [tuple(base + i for i in tri) for tri in mathutils.geometry.tessellate_polygon(rings)]
+    mesh_object('Context water', water_v, water_f, flat_mat('water', (0.02, 0.05, 0.07), 0.03, IOR=1.33), coll)
+    g = 20000
+    mesh_object('Context ground', [(-g, -g, ground_z), (g, -g, ground_z), (g, g, ground_z), (-g, g, ground_z)], [(0, 1, 2, 3)],
+                flat_mat('ground', (0.1, 0.11, 0.1), 0.9), coll)
+    print(f'[casa] context: {len(town[1])} building faces, {len(water_f)} water triangles')
+    return coll
+
+
+def export_context(coll, path):
+    """The same surroundings as a .glb for Unreal, lined up with the flat's own .glb."""
+    bpy.ops.object.select_all(action='DESELECT')
+    for obj in coll.objects:
+        obj.select_set(True)
+    bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', use_selection=True)
+    print(f'[casa] saved {path}')
 
 
 def add_ceiling():
@@ -194,9 +340,11 @@ def lamp_lights():
     for obj in list(bpy.data.objects):
         if obj.type != 'MESH' or not any(s.material and s.material.name.split('.')[0] == 'light' for s in obj.material_slots):
             continue
+        for part in (obj.parent.children_recursive if obj.parent else [obj]):
+            part.visible_shadow = False                      # the lamp's own shade would otherwise trap the bulb's light
         centre = sum((obj.matrix_world @ mathutils.Vector(c) for c in obj.bound_box), mathutils.Vector()) / 8
         data = bpy.data.lights.new(f'{obj.name} light', 'POINT')
-        data.energy, data.shadow_soft_size = 25, 0.06
+        data.energy, data.shadow_soft_size = 40, 0.06
         data.color = (1.0, 0.78, 0.55)                       # ~2700 K, like the SOLHETTA bulbs
         light = bpy.data.objects.new(data.name, data)
         light.location = centre - mathutils.Vector((0, 0, 0.05))
@@ -256,7 +404,7 @@ def add_cameras():
     cams = {}
     for name, (eye, target, lens) in VIEWS.items():
         data = bpy.data.cameras.new(f'Camera {name}')
-        data.lens = lens
+        data.lens, data.clip_end = lens, 20000          # far enough for the city around
         cam = bpy.data.objects.new(data.name, data)
         cam.location = plan(*eye)
         cam.rotation_euler = (plan(*target) - plan(*eye)).to_track_quat('-Z', 'Y').to_euler()
@@ -285,6 +433,7 @@ def setup_render(samples, res):
     scene.cycles.samples = samples
     scene.cycles.use_denoising = True
     scene.cycles.max_bounces = 8
+    scene.render.use_persistent_data = True              # build the scene once, not for every frame
     w, h = (int(v) for v in res.lower().split('x'))
     scene.render.resolution_x, scene.render.resolution_y = w, h
     looks = [i.identifier for i in scene.view_settings.bl_rna.properties['view_transform'].enum_items]
@@ -299,6 +448,7 @@ Outliner (top right):
   Ceiling     added here so light only comes in through the windows (hidden in the overview camera)
   Sun, Sky    time of day (World tab for the sky)
   Lamp lights warm point lights inside each lamp
+  Context     the real buildings and water around (only with --site)
   Camera ...  one per room: select one, then View > Cameras > Set Active Object as Camera (Ctrl+Numpad 0)
 
 Try: press F12 to render the active camera. Z switches Solid / Rendered view in the viewport.
@@ -318,6 +468,12 @@ def main():
     sky, bg = setup_world()
     sun = add_sun()
     cams = add_cameras()
+    if args.site:
+        try:
+            coll = add_context(args.site, args.north, args.radius, os.path.join(out, 'context-cache'))
+            export_context(coll, os.path.join(os.path.dirname(os.path.abspath(args.glb)), 'casa-context.glb'))
+        except OSError as e:   # 3D BAG / PDOK unreachable: render the flat on its own
+            print(f'[casa] no surroundings ({e})')
     setup_render(args.samples, args.res)
     text = bpy.data.texts.new('README')
     text.write(README)
