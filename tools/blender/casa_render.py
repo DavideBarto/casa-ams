@@ -214,6 +214,18 @@ def inside(x, y, ring):
     return c
 
 
+def near(x, y, ring, margin):
+    """Inside the ring, or within margin of its edges."""
+    if inside(x, y, ring):
+        return True
+    for (x1, y1), (x2, y2) in zip(ring, ring[1:] + ring[:1]):
+        dx, dy = x2 - x1, y2 - y1
+        t = max(0.0, min(1.0, ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy or 1)))
+        if math.hypot(x - x1 - t * dx, y - y1 - t * dy) < margin:
+            return True
+    return False
+
+
 def thin(ring, step=2.0):
     """Drop points closer than step metres to the last one kept: BGT outlines are traced at centimetre detail."""
     kept = ring[:1]
@@ -246,7 +258,8 @@ def flat_mat(name, color, roughness, **inputs):
 
 def add_context(site, north, radius, cache):
     """The real city around the flat: every building from the 3D BAG (TU Delft, CC BY 4.0) with its real roof shape,
-    and the water from the BGT (Dutch large-scale topography, CC0). The flat's own building is cut off below the flat."""
+    and the water from the BGT (Dutch large-scale topography, CC0). The flat's own tower is cut off below the flat;
+    other towers of the same building stay whole."""
     try:
         e0, n0, z0 = (float(v) for v in site.split(','))
     except ValueError:
@@ -258,7 +271,7 @@ def add_context(site, north, radius, cache):
     bpy.context.scene.collection.children.link(coll)
     box = lambda r: f'{e0 - r:.0f},{n0 - r:.0f},{e0 + r:.0f},{n0 + r:.0f}'
 
-    town, own = ([], []), ([], [])
+    town, own, roofs = ([], []), ([], []), []
     for d in pages(f'https://api.3dbag.nl/collections/pand/items?bbox={box(radius)}&limit=100', cache):
         (sx, sy, sz), (tx, ty, tz) = d['metadata']['transform']['scale'], d['metadata']['transform']['translate']
         for f in d['features']:
@@ -282,14 +295,34 @@ def add_context(site, north, radius, cache):
                                     verts.append(local(*xyz(i)))
                                 face.append(ids[i])
                             faces.append(face)
+                            if mine:
+                                ring = [verts[k] for k in face]
+                                if max(p[2] for p in ring) - min(p[2] for p in ring) < 0.25 and ring[0][2] > 0:   # 3D BAG roofs vary by cm
+                                    roofs.append([p[:2] for p in ring])     # a flat roof above the flat's floor
     building = flat_mat('context-building', (0.5, 0.48, 0.45), 0.85)
     mesh_object('Context buildings', *town, building, coll)
     if own[1]:
         tower = mesh_object('Context own building', *own, building, coll)
         bm = bmesh.new()
         bm.from_mesh(tower.data)
-        cut = bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, -0.35), plane_no=(0, 0, 1), clear_outer=True)
-        bmesh.ops.holes_fill(bm, edges=[e for e in cut['geom_cut'] if isinstance(e, bmesh.types.BMEdge) and e.is_valid], sides=0)
+        # one building can hold several towers on a shared podium: remove only the flat's own tower, i.e. the roofs above
+        # the flat's floor that cover it or touch one that does (setbacks, plant rooms); other towers don't touch
+        region = [r for r in roofs if inside(0, 0, r)]
+        grown = True
+        while grown:
+            grown = False
+            for r in roofs:
+                if r not in region and any(near(x, y, q, 1.0) for x, y in r for q in region):
+                    region.append(r)
+                    grown = True
+        ours = lambda co: not region or any(near(co.x, co.y, r, 1.0) for r in region)
+        print(f'[casa] own tower: {len(region)} roofs above the flat, cut below the flat' if region
+              else '[casa] no flat roof over the flat: cutting its whole building below the flat')
+        cut = bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, -0.35), plane_no=(0, 0, 1))
+        bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.calc_center_median().z > -0.35 and ours(f.calc_center_median())], context='FACES')
+        bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context='VERTS')
+        bmesh.ops.holes_fill(bm, edges=[e for e in cut['geom_cut'] if isinstance(e, bmesh.types.BMEdge) and e.is_valid and e.is_boundary
+                                        and ours((e.verts[0].co + e.verts[1].co) / 2)], sides=0)
         bm.to_mesh(tower.data)
         bm.free()
 
