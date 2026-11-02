@@ -125,7 +125,11 @@ def orient_sun(north):
         (y0, elev), (y90, _) = towards_sun(0.0), towards_sun(90.0)
         lat, lon, tz = AMSTERDAM
         h = float(s.get_editor_property('SolarTime'))
-        when = [int(s.get_editor_property(p)) for p in ('Year', 'Month', 'Day')]
+        try:
+            year = int(s.get_editor_property('Year'))
+        except Exception:
+            year = 2026
+        when = [year, int(s.get_editor_property('Month')), int(s.get_editor_property('Day'))]
         # SunSky's own daylight-saving setting is whichever matches the sun height it shows
         sun = min((unreal.SunPositionFunctionLibrary.get_sun_position(lat, lon, tz, dst, *when, int(h), int(h % 1 * 60), 0) for dst in (False, True)),
                   key=lambda d: abs(d.elevation - elev))
