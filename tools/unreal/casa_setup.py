@@ -146,19 +146,24 @@ def materials(a):
     return comp, [m.get_name() for m in comp.get_materials() if m]
 
 
+def lamp_light(label, location, tags=()):
+    light = spawn(unreal.PointLight, label, location)
+    lc = light.point_light_component
+    lc.set_editor_property('intensity_units', unreal.LightUnits.LUMENS)
+    lc.set_editor_property('intensity', 800.0)                   # an 806 lm SOLHETTA bulb
+    lc.set_editor_property('light_color', unreal.Color(r=255, g=197, b=143, a=255))   # ~2700 K
+    lc.set_editor_property('attenuation_radius', 700.0)
+    light.set_editor_property('tags', [unreal.Name('CasaLamp'), *map(unreal.Name, tags)])
+    return light
+
+
 def add_lamp_lights():
     n = 0
     for a in filter(is_flat, actors.get_all_level_actors()):
         if not any(LIGHT_MAT.search(m) for m in materials(a)[1]):
             continue
         origin, _ = a.get_actor_bounds(False)
-        light = spawn(unreal.PointLight, f'Casa Lamp light ({a.get_actor_label()})', origin - unreal.Vector(0, 0, 5))
-        lc = light.point_light_component
-        lc.set_editor_property('intensity_units', unreal.LightUnits.LUMENS)
-        lc.set_editor_property('intensity', 800.0)                   # an 806 lm SOLHETTA bulb
-        lc.set_editor_property('light_color', unreal.Color(r=255, g=197, b=143, a=255))   # ~2700 K
-        lc.set_editor_property('attenuation_radius', 700.0)
-        light.set_editor_property('tags', [unreal.Name('CasaLamp')])
+        lamp_light(f'Casa Lamp light ({a.get_actor_label()})', origin - unreal.Vector(0, 0, 5))
         n += 1
     log(f'added {n} lamp lights (tag CasaLamp)')
 
@@ -186,14 +191,18 @@ def tune_pieces():
     log(f'{glass} glass pieces drawn without Nanite ({doors} balcony doors you can walk through), {shades} lamp parts no longer cast shadows')
 
 
-def make_solid():
+def solid(mesh):
     """The glTF import gives meshes no collision, so the player falls through the floor: collide with their own triangles."""
+    body = mesh.get_editor_property('body_setup')
+    if body and body.get_editor_property('collision_trace_flag') != unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE:
+        mesh.modify()                                    # so saving writes it
+        body.set_editor_property('collision_trace_flag', unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE)
+
+
+def make_solid():
     meshes = {mesh_path(a): a.static_mesh_component.static_mesh for a in [*filter(is_flat, actors.get_all_level_actors()), *city()]}
     for m in meshes.values():
-        body = m.get_editor_property('body_setup')
-        if body and body.get_editor_property('collision_trace_flag') != unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE:
-            m.modify()                                   # so save_directory writes it
-            body.set_editor_property('collision_trace_flag', unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE)
+        solid(m)
     log(f'{len(meshes)} meshes made solid (walls, floors, furniture and the city)')
 
 
@@ -260,4 +269,5 @@ def main():
     handle = unreal.register_slate_post_tick_callback(wait)
 
 
-main()
+if __name__ == '__main__':      # casa_live.py imports the helpers above
+    main()

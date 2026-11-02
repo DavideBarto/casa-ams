@@ -43,6 +43,12 @@ The Layouts tab has **Download 3D model (.glb)**: the whole flat with named piec
   your heights, with a camera behind whoever you control; **Tab** switches between them. It needs the *All Toolsets*
   plugin, whose Blueprint tools write the switching logic. Add `--looks` with two MetaHuman Blueprints (built in
   MetaHuman Creator at 1.80 m, the mannequin's height) to make them real-looking people instead of mannequins.
+- Live Unreal: double-click `tools/unreal/casa_live.bat` (Windows, with Python and Remote Execution as above). It opens
+  Unreal with the flat, starts `live_bridge.py` in a small window, and opens the planner with `?live`. From then on every
+  move, turn, swap, new piece or deletion in the planner shows up in the Unreal level about a second later; the dot at
+  the top says whether Unreal is up to date. The first time, Chrome asks whether the site may reach other apps on this
+  device: allow it. The live pieces replace the furniture that came in with the flat's `.glb` and are labelled
+  "Casa Live ..." in the Outliner. While you walk in Play, changes wait for the next Play.
 
 ## Run locally
 
