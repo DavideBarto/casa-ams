@@ -1,24 +1,31 @@
-"""Keep the open Unreal level in step with the planner. Run it with Windows Python, next to an open Unreal Editor:
+"""Keep the open Unreal level in step with the planner. Run it with Windows Python:
 
-    python live_bridge.py
+    python live_bridge.py --open
 
-then open the planner with ?live (https://davidebarto.github.io/casa-ams/?live). Every change in the planner comes
-here and goes on to the editor through Python Remote Execution (tick Enable Remote Execution in the project's
-Python settings). casa_live.bat starts the editor, this and the planner in one go.
+--open also starts Unreal with the flat (unless it is running) and opens the planner with ?live
+(https://davidebarto.github.io/casa-ams/?live). Every change in the planner comes here and goes on to the editor
+through Python Remote Execution (tick Enable Remote Execution in the project's Python settings).
+A desktop shortcut to exactly that command starts everything with a double-click.
 """
+import argparse
 import json
 import math
 import os
 import re
+import subprocess
 import sys
 import tempfile
 import threading
 import time
+import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from remote import rx             # the engine's remote_execution module
 
 PORT = 8766
+PLANNER = 'https://davidebarto.github.io/casa-ams/?live'
+PROJECT = os.path.expanduser(r'~\Documents\Unreal Projects\ApartAMS\ApartAMS.uproject')
+EDITOR = os.path.join(os.path.dirname(rx.__file__), *['..'] * 5, 'Binaries', 'Win64', 'UnrealEditor.exe')   # Engine/Plugins/.../Python
 HERE = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.join(tempfile.gettempdir(), 'casa-live')      # the planner's pieces as .glb, and the latest layout
 ORIGINS = re.compile(r'https://davidebarto\.github\.io|http://(localhost|127\.0\.0\.1)(:\d+)?')
@@ -171,6 +178,15 @@ class Server(ThreadingHTTPServer):
 
 
 def main():
+    p = argparse.ArgumentParser(prog='live_bridge.py')
+    p.add_argument('--open', action='store_true', help='also start Unreal (unless it is running) and open the planner')
+    p.add_argument('--project', default=PROJECT, help='the Unreal project --open starts')
+    args = p.parse_args()
+    if args.open:
+        tasks = subprocess.run(['tasklist', '/fi', 'imagename eq UnrealEditor.exe'], capture_output=True, text=True).stdout
+        if 'UnrealEditor.exe' not in tasks:   # its own process: closing this window must not close Unreal
+            subprocess.Popen([os.path.normpath(EDITOR), args.project], creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
+        webbrowser.open(PLANNER)
     os.makedirs(CACHE, exist_ok=True)
     try:
         server = Server(('127.0.0.1', PORT), Handler)
