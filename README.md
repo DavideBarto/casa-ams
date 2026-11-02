@@ -39,6 +39,9 @@ The Layouts tab has **Download 3D model (.glb)**: the whole flat with named piec
   Windows Python (`python.exe` from WSL): `python tools/unreal/remote.py "path/to/tools/unreal/casa_setup.py" --north 0`.
   The import finishes after the command returns, so progress and errors still go to the editor's Output Log.
   Remote execution lets any program on this computer run code in the editor: untick it when you're done.
+  `py "path/to/tools/unreal/casa_people.py" --heights 180,165` then puts two people in the living room, scaled to
+  your heights, with a camera behind whoever you control; **Tab** switches between them. It needs the *All Toolsets*
+  plugin, whose Blueprint tools write the switching logic.
 
 ## Run locally
 
