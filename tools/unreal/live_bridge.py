@@ -124,7 +124,7 @@ def run(rex, node, code):
     finally:
         rex.close_command_connection()
     note = ' '.join(line['output'].strip() for line in result['output'])
-    return note, None if result['success'] else result['result'].strip().splitlines()[-1]
+    return note, None if result['success'] else (result['result'].strip().splitlines() or ['failed'])[-1]
 
 
 def worker():
@@ -132,7 +132,7 @@ def worker():
     global pending
     rex = rx.RemoteExecution()
     rex.start()
-    last, last_node, unsaved, save_at = None, None, False, 0
+    last, last_node, unsaved, save_at, sync_error = None, None, False, 0, None
     while True:
         with wake:
             if pending is None or not state['unreal']:   # a change may have come in during the last sync
@@ -149,15 +149,15 @@ def worker():
             if job:
                 with open(os.path.join(CACHE, 'layout.json'), 'w', encoding='utf-8') as f:
                     json.dump(job, f)
-                note, error = run(rex, node, f'casa_live.sync({CACHE!r})')
-                state.update(done=job['v'], note=note, error=error)
-                print(f"v{job['v']}: {error or note}", flush=True)
+                note, sync_error = run(rex, node, f'casa_live.sync({CACHE!r})')
+                state.update(done=job['v'], note=note, error=sync_error)
+                print(f"v{job['v']}: {sync_error or note}", flush=True)
                 last, last_node, unsaved = job, node, True
                 save_at = time.monotonic() + 10       # once you stop arranging for a while
             elif unsaved and time.monotonic() > save_at:
                 unsaved = not run(rex, node, 'casa_live.save()')[0].endswith('saved')
                 save_at = time.monotonic() + 30       # in Play, or it failed: try again later
-                state['error'] = None
+                state['error'] = sync_error              # Unreal answers again: back to the last sync's outcome
         except Exception as e:                        # the editor closed or is busy: try again in a moment
             state['error'] = f'Unreal did not answer ({e})'
             print(state['error'], flush=True)
