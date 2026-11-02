@@ -190,8 +190,12 @@ def cached_json(url, cache):
         with fetch(url) as r, open(path + '.part', 'wb') as f:
             f.write(r.read())
         os.replace(path + '.part', path)
-    with open(path, encoding='utf-8') as f:
-        return json.load(f)
+    try:
+        with open(path, encoding='utf-8') as f:
+            return json.load(f)
+    except ValueError:
+        os.remove(path)                                  # an error page, not data: don't keep it
+        raise
 
 
 def pages(url, cache):
@@ -472,7 +476,7 @@ def main():
         try:
             coll = add_context(args.site, args.north, args.radius, os.path.join(out, 'context-cache'))
             export_context(coll, os.path.join(os.path.dirname(os.path.abspath(args.glb)), 'casa-context.glb'))
-        except OSError as e:   # 3D BAG / PDOK unreachable: render the flat on its own
+        except (OSError, ValueError) as e:   # 3D BAG / PDOK unreachable or not JSON: render the flat on its own
             print(f'[casa] no surroundings ({e})')
     setup_render(args.samples, args.res)
     text = bpy.data.texts.new('README')

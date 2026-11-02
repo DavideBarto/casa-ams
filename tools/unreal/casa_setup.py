@@ -229,7 +229,8 @@ def finish(fresh, north):
         add_lamp_lights()
         add_player_start()
     place_fog()
-    orient_sun(north)
+    if north is not None:                        # leave a hand-tuned NorthOffset alone
+        orient_sun(north)
     levels.save_current_level()
     unreal.EditorAssetLibrary.save_directory(CONTENT)
     log('done: press Play (Alt+P) and walk with W A S D; Shift+F1 frees the mouse')
@@ -237,11 +238,12 @@ def finish(fresh, north):
 
 def main():
     p = argparse.ArgumentParser(prog='casa_setup.py')
-    p.add_argument('--north', type=float, default=0.0, help="compass bearing the drawing's top edge faces")
+    p.add_argument('--north', type=float, help="compass bearing the drawing's top edge faces")
     north = p.parse_args(sys.argv[1:]).north
     if not levels.new_level(LEVEL):
         levels.load_level(LEVEL)
     fresh = not any(map(is_flat, actors.get_all_level_actors()))
+    before = imported_count()
     if fresh:
         import_glb(find_glb(), f'{CONTENT}/Model')
     else:
@@ -249,17 +251,19 @@ def main():
     town = None if city() else newest('casa-context*.glb')
     if town:
         import_glb(town, f'{CONTENT}/Context')
+    expect = fresh or bool(town)                 # wait for new pieces only if something is being imported
     # Interchange may finish in the background: wait (without blocking the editor) until the pieces stop arriving.
     state = {'ticks': 0, 'last': -1, 'still': 0}
 
     def wait(_delta):
         state['ticks'] += 1
         n = imported_count()
-        state['still'] = state['still'] + 1 if n == state['last'] and n > 0 else 0
+        arrived = n > before or not expect
+        state['still'] = state['still'] + 1 if n == state['last'] and arrived else 0
         state['last'] = n
-        if state['still'] > 30 or state['ticks'] > 3000:
+        if state['still'] > 30 or state['ticks'] > 30000:          # a big city import can take minutes
             unreal.unregister_slate_post_tick_callback(handle)
-            if n == 0:
+            if expect and n <= before:
                 log('the import produced no pieces; check the Output Log for Interchange errors')
             finish(fresh, north)
 
