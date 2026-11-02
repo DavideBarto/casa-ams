@@ -63,7 +63,7 @@ TIMES = {
     'sunset': (3, 285, 12, 0.35, True, -0.5),
     'night': (-15, 300, 0.0, 0.02, True, 0.0),
 }
-INTERIOR = (-100, -2165, 9290, 6350)   # planner mm: where the ceiling goes (not over the balcony)
+INTERIOR = (-210, -2090, 9450, 6490)   # planner mm: where the ceiling goes (not over the balcony)
 CEILING_H = 2600
 
 
